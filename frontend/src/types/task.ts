@@ -2,5 +2,7 @@
 export interface Task {
   id: number;
   title: string;
+  memo?: string | null;
   done: boolean;
+  created_at?: string;
 }
