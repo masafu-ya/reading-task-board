@@ -8,6 +8,7 @@ backend/venv/
 .env.local
 backend/.env
 frontend/.env.local
+!frontend/.env.local.example
 
 # Next.js
 frontend/.next/
