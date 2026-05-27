@@ -1,6 +1,23 @@
-# backend（Day 3: FastAPI）
+# backend（FastAPI + MySQL）
 
-学習用の API サーバです。MySQL 連携はまだで、タスクはメモリに保持します。
+学習用の API サーバです。Day 5 以降、タスクは MySQL に保存されます。
+
+## 事前準備
+
+1. MySQL を起動
+
+```powershell
+cd "D:\cursolアプリ\サンプルプロジェクト１"
+.\mysql\start-mysql.ps1
+```
+
+2. テーブル作成（初回のみ）
+
+```powershell
+Get-Content "..\mysql\init.sql" | & "C:\Program Files\MySQL\MySQL Server 8.4\bin\mysql.exe" -u root -p
+```
+
+3. `backend/.env` を作成（`.env.example` をコピーしてパスワードを設定）
 
 ## 起動
 
@@ -15,23 +32,15 @@ uvicorn main:app --reload --port 8000
 
 ## 動作確認
 
-- `GET /health`
-  - `http://localhost:8000/health`
-- Swagger UI
-  - `http://localhost:8000/docs`
-- タスク一覧 / 追加
-  - `GET /tasks` : `http://localhost:8000/tasks`
-  - `POST /tasks`（例）
+- `GET /health` → `{"status":"ok","database":"connected"}`
+- Swagger UI → `http://localhost:8000/docs`
+- MySQL で確認:
 
-```json
-{
-  "title": "テストタスク",
-  "memo": "任意",
-  "done": false
-}
+```sql
+USE learning_app;
+SELECT * FROM tasks;
 ```
 
 ## CORS
 
 Next.js（`http://localhost:3000`）から呼び出すため、最低限の CORS を許可しています。
-

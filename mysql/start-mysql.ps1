@@ -19,4 +19,4 @@ if ($running) {
 Start-Process -FilePath $mysqld -ArgumentList "--defaults-file=`"$config`"" -WindowStyle Hidden
 Start-Sleep -Seconds 4
 Write-Host "MySQL を起動しました。ポート 3306"
-Write-Host "接続確認: & `"$mysqlBin\mysql.exe`" -u root -p"
+Write-Host ('接続確認: "' + (Join-Path $mysqlBin "mysql.exe") + '" -u root -p')

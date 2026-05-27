@@ -48,7 +48,7 @@ export default function TaskBoard() {
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-zinc-900">タスク一覧</h2>
         <p className="mt-1 text-sm text-zinc-500">
-          Day 4 — FastAPI と連携（メモリ API）
+          Day 5 — MySQL に保存（API 再起動後も残る）
         </p>
       </div>
 
