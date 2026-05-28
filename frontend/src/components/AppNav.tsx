@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const links = [
   { href: "/", label: "タスク" },
   { href: "/books", label: "読書メモ" },
+  { href: "/about", label: "について" },
 ];
 
 export default function AppNav() {

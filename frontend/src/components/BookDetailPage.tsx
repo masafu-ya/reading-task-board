@@ -1,48 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useCallback, useEffect, useState } from "react";
-import {
-  createBookNote,
-  fetchBook,
-  fetchBookNotes,
-} from "@/lib/books-api";
-import type { Book } from "@/types/book";
-import type { BookNote } from "@/types/book";
+import { FormEvent, useState } from "react";
+import ErrorAlert from "@/components/ui/ErrorAlert";
+import LoadingMessage from "@/components/ui/LoadingMessage";
+import { useBookNotes } from "@/hooks/useBookNotes";
 
 type BookDetailPageProps = {
   bookId: number;
 };
 
 export default function BookDetailPage({ bookId }: BookDetailPageProps) {
-  const [book, setBook] = useState<Book | null>(null);
-  const [notes, setNotes] = useState<BookNote[]>([]);
+  const { book, notes, loading, error, addNote } = useBookNotes(bookId);
   const [content, setContent] = useState("");
-  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadData = useCallback(async () => {
-    setError(null);
-    try {
-      const [bookData, notesData] = await Promise.all([
-        fetchBook(bookId),
-        fetchBookNotes(bookId),
-      ]);
-      setBook(bookData);
-      setNotes(notesData);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "データの読み込みに失敗しました",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [bookId]);
-
-  useEffect(() => {
-    void loadData();
-  }, [loadData]);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -50,13 +21,9 @@ export default function BookDetailPage({ bookId }: BookDetailPageProps) {
     if (!trimmed) return;
 
     setSubmitting(true);
-    setError(null);
     try {
-      await createBookNote(bookId, trimmed);
+      await addNote(trimmed);
       setContent("");
-      await loadData();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "メモ追加に失敗しました");
     } finally {
       setSubmitting(false);
     }
@@ -64,8 +31,8 @@ export default function BookDetailPage({ bookId }: BookDetailPageProps) {
 
   if (loading) {
     return (
-      <div className="px-6 py-10 text-center text-sm text-zinc-500">
-        読み込み中...
+      <div className="px-6 py-10">
+        <LoadingMessage />
       </div>
     );
   }
@@ -94,11 +61,7 @@ export default function BookDetailPage({ bookId }: BookDetailPageProps) {
         )}
       </div>
 
-      {error && (
-        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
+      {error && <ErrorAlert message={error} />}
 
       <section className="mb-8">
         <h3 className="mb-3 text-sm font-semibold text-zinc-700">メモ一覧</h3>

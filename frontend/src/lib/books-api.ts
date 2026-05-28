@@ -1,7 +1,5 @@
+import { apiGet, apiSend } from "@/lib/http";
 import type { Book, BookNote } from "@/types/book";
-
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 function toBook(data: unknown): Book {
   const item = data as Record<string, unknown>;
@@ -26,11 +24,7 @@ function toBookNote(data: unknown): BookNote {
 }
 
 export async function fetchBooks(): Promise<Book[]> {
-  const res = await fetch(`${API_URL}/books`, { cache: "no-store" });
-  if (!res.ok) {
-    throw new Error(`本の一覧取得に失敗しました (${res.status})`);
-  }
-  const data: unknown = await res.json();
+  const data = await apiGet<unknown[]>("/books", "本の一覧取得に失敗しました");
   if (!Array.isArray(data)) {
     throw new Error("本一覧の形式が不正です");
   }
@@ -38,11 +32,10 @@ export async function fetchBooks(): Promise<Book[]> {
 }
 
 export async function fetchBook(id: number): Promise<Book> {
-  const res = await fetch(`${API_URL}/books/${id}`, { cache: "no-store" });
-  if (!res.ok) {
-    throw new Error(`本の取得に失敗しました (${res.status})`);
-  }
-  const data: unknown = await res.json();
+  const data = await apiGet<unknown>(
+    `/books/${id}`,
+    "本の取得に失敗しました",
+  );
   return toBook(data);
 }
 
@@ -50,33 +43,24 @@ export async function createBook(
   title: string,
   author?: string,
 ): Promise<Book> {
-  const res = await fetch(`${API_URL}/books`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title, author: author || null }),
-  });
-  if (!res.ok) {
-    throw new Error(`本の追加に失敗しました (${res.status})`);
-  }
-  const data: unknown = await res.json();
+  const data = await apiSend<unknown>(
+    "/books",
+    "POST",
+    "本の追加に失敗しました",
+    { title, author: author || null },
+  );
   return toBook(data);
 }
 
 export async function deleteBook(id: number): Promise<void> {
-  const res = await fetch(`${API_URL}/books/${id}`, { method: "DELETE" });
-  if (!res.ok) {
-    throw new Error(`本の削除に失敗しました (${res.status})`);
-  }
+  await apiSend<void>(`/books/${id}`, "DELETE", "本の削除に失敗しました");
 }
 
 export async function fetchBookNotes(bookId: number): Promise<BookNote[]> {
-  const res = await fetch(`${API_URL}/books/${bookId}/notes`, {
-    cache: "no-store",
-  });
-  if (!res.ok) {
-    throw new Error(`メモ一覧取得に失敗しました (${res.status})`);
-  }
-  const data: unknown = await res.json();
+  const data = await apiGet<unknown[]>(
+    `/books/${bookId}/notes`,
+    "メモ一覧取得に失敗しました",
+  );
   if (!Array.isArray(data)) {
     throw new Error("メモ一覧の形式が不正です");
   }
@@ -87,14 +71,11 @@ export async function createBookNote(
   bookId: number,
   content: string,
 ): Promise<BookNote> {
-  const res = await fetch(`${API_URL}/books/${bookId}/notes`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ content }),
-  });
-  if (!res.ok) {
-    throw new Error(`メモ追加に失敗しました (${res.status})`);
-  }
-  const data: unknown = await res.json();
+  const data = await apiSend<unknown>(
+    `/books/${bookId}/notes`,
+    "POST",
+    "メモ追加に失敗しました",
+    { content },
+  );
   return toBookNote(data);
 }

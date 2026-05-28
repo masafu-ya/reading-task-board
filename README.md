@@ -16,9 +16,16 @@
 
 ```
 サンプルプロジェクト１/
-├── frontend/          # Next.js（Day 1〜）
-├── backend/           # FastAPI（Day 3〜）
-├── mysql/             # MySQL 起動スクリプト等
+├── frontend/              # Next.js
+│   └── src/
+│       ├── app/           # ページ（/, /books, /about）
+│       ├── components/    # UI 部品
+│       │   └── ui/        # 共通コンポーネント
+│       ├── hooks/         # useTasks, useBooks など
+│       ├── lib/           # API 通信（http.ts, tasks-api.ts）
+│       └── types/         # TypeScript 型定義
+├── backend/               # FastAPI
+├── mysql/                 # MySQL 起動スクリプト等
 ├── LEARNING_CURRICULUM.md
 └── README.md
 ```
