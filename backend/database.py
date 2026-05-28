@@ -70,6 +70,11 @@ def create_task(title: str, memo: Optional[str], done: bool) -> dict[str, Any]:
             (title, memo, int(done)),
         )
         task_id = cursor.lastrowid
+    return get_task_by_id(task_id)
+
+
+def get_task_by_id(task_id: int) -> dict[str, Any]:
+    with get_cursor() as cursor:
         cursor.execute(
             """
             SELECT id, title, memo, done, created_at
@@ -80,8 +85,44 @@ def create_task(title: str, memo: Optional[str], done: bool) -> dict[str, Any]:
         )
         row = cursor.fetchone()
     if row is None:
-        raise RuntimeError("作成したタスクの取得に失敗しました")
+        raise LookupError(f"Task {task_id} not found")
     return row_to_task(row)
+
+
+def update_task(task_id: int, title: str, memo: Optional[str]) -> dict[str, Any]:
+    with get_cursor() as cursor:
+        cursor.execute(
+            """
+            UPDATE tasks
+            SET title = %s, memo = %s
+            WHERE id = %s
+            """,
+            (title, memo, task_id),
+        )
+        if cursor.rowcount == 0:
+            raise LookupError(f"Task {task_id} not found")
+    return get_task_by_id(task_id)
+
+
+def toggle_task_done(task_id: int) -> dict[str, Any]:
+    with get_cursor() as cursor:
+        cursor.execute("SELECT done FROM tasks WHERE id = %s", (task_id,))
+        row = cursor.fetchone()
+        if row is None:
+            raise LookupError(f"Task {task_id} not found")
+        new_done = 0 if row["done"] else 1
+        cursor.execute(
+            "UPDATE tasks SET done = %s WHERE id = %s",
+            (new_done, task_id),
+        )
+    return get_task_by_id(task_id)
+
+
+def delete_task(task_id: int) -> None:
+    with get_cursor() as cursor:
+        cursor.execute("DELETE FROM tasks WHERE id = %s", (task_id,))
+        if cursor.rowcount == 0:
+            raise LookupError(f"Task {task_id} not found")
 
 
 def check_db_connection() -> bool:

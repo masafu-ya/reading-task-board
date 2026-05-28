@@ -42,3 +42,43 @@ export async function createTask(title: string): Promise<Task> {
   const data: unknown = await res.json();
   return toTask(data);
 }
+
+/** PUT /tasks/{id} — タイトル・メモを更新 */
+export async function updateTask(
+  id: number,
+  title: string,
+  memo?: string | null,
+): Promise<Task> {
+  const res = await fetch(`${API_URL}/tasks/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title, memo: memo ?? null }),
+  });
+  if (!res.ok) {
+    throw new Error(`タスク更新に失敗しました (${res.status})`);
+  }
+  const data: unknown = await res.json();
+  return toTask(data);
+}
+
+/** PATCH /tasks/{id}/done — 完了状態を切り替え */
+export async function toggleTaskDone(id: number): Promise<Task> {
+  const res = await fetch(`${API_URL}/tasks/${id}/done`, {
+    method: "PATCH",
+  });
+  if (!res.ok) {
+    throw new Error(`完了状態の更新に失敗しました (${res.status})`);
+  }
+  const data: unknown = await res.json();
+  return toTask(data);
+}
+
+/** DELETE /tasks/{id} — タスクを削除 */
+export async function deleteTask(id: number): Promise<void> {
+  const res = await fetch(`${API_URL}/tasks/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    throw new Error(`タスク削除に失敗しました (${res.status})`);
+  }
+}

@@ -30,9 +30,20 @@ class TaskCreate(BaseModel):
     done: bool = False
 
 
+class TaskUpdate(BaseModel):
+    title: str = Field(min_length=1, max_length=255)
+    memo: Optional[str] = None
+
+
 class TaskOut(TaskCreate):
     id: int
     created_at: datetime
+
+
+def _handle_db_error(exc: Exception) -> HTTPException:
+    if isinstance(exc, LookupError):
+        return HTTPException(status_code=404, detail=str(exc))
+    return HTTPException(status_code=500, detail=f"DB error: {exc}")
 
 
 @app.get("/health")
@@ -54,4 +65,28 @@ def create_task(task: TaskCreate):
     try:
         return db.create_task(task.title, task.memo, task.done)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"DB error: {exc}") from exc
+        raise _handle_db_error(exc) from exc
+
+
+@app.put("/tasks/{task_id}", response_model=TaskOut)
+def update_task(task_id: int, task: TaskUpdate):
+    try:
+        return db.update_task(task_id, task.title, task.memo)
+    except Exception as exc:
+        raise _handle_db_error(exc) from exc
+
+
+@app.patch("/tasks/{task_id}/done", response_model=TaskOut)
+def toggle_task_done(task_id: int):
+    try:
+        return db.toggle_task_done(task_id)
+    except Exception as exc:
+        raise _handle_db_error(exc) from exc
+
+
+@app.delete("/tasks/{task_id}", status_code=204)
+def delete_task(task_id: int):
+    try:
+        db.delete_task(task_id)
+    except Exception as exc:
+        raise _handle_db_error(exc) from exc

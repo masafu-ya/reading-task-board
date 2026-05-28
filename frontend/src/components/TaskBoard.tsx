@@ -3,7 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 import TaskForm from "@/components/TaskForm";
 import TaskList from "@/components/TaskList";
-import { createTask, fetchTasks } from "@/lib/api";
+import {
+  createTask,
+  deleteTask,
+  fetchTasks,
+  toggleTaskDone,
+  updateTask,
+} from "@/lib/api";
 import type { Task } from "@/types/task";
 
 export default function TaskBoard() {
@@ -25,22 +31,42 @@ export default function TaskBoard() {
     }
   }, []);
 
-  // 初回表示時に API からタスク一覧を取得
   useEffect(() => {
     void loadTasks();
   }, [loadTasks]);
 
-  async function handleAdd(title: string) {
+  async function runAction(action: () => Promise<void>, fallback: string) {
     setError(null);
     try {
-      await createTask(title);
+      await action();
       await loadTasks();
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "タスクの追加に失敗しました";
+      const message = err instanceof Error ? err.message : fallback;
       setError(message);
       throw err;
     }
+  }
+
+  async function handleAdd(title: string) {
+    await runAction(() => createTask(title).then(() => {}), "タスクの追加に失敗しました");
+  }
+
+  async function handleUpdate(id: number, title: string) {
+    await runAction(
+      () => updateTask(id, title).then(() => {}),
+      "タスクの更新に失敗しました",
+    );
+  }
+
+  async function handleToggleDone(id: number) {
+    await runAction(
+      () => toggleTaskDone(id).then(() => {}),
+      "完了状態の更新に失敗しました",
+    );
+  }
+
+  async function handleDelete(id: number) {
+    await runAction(() => deleteTask(id), "タスクの削除に失敗しました");
   }
 
   return (
@@ -48,7 +74,7 @@ export default function TaskBoard() {
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-zinc-900">タスク一覧</h2>
         <p className="mt-1 text-sm text-zinc-500">
-          Day 5 — MySQL に保存（API 再起動後も残る）
+          Day 6 — 編集・削除・完了（CRUD 完成）
         </p>
       </div>
 
@@ -70,7 +96,12 @@ export default function TaskBoard() {
             読み込み中...
           </p>
         ) : (
-          <TaskList tasks={tasks} />
+          <TaskList
+            tasks={tasks}
+            onToggleDone={handleToggleDone}
+            onUpdate={handleUpdate}
+            onDelete={handleDelete}
+          />
         )}
       </section>
 
