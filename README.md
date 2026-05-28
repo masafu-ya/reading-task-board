@@ -23,7 +23,22 @@
 └── README.md
 ```
 
-## 起動方法（Day 1）
+## 起動方法
+
+### 1. MySQL
+
+```powershell
+.\mysql\start-mysql.ps1
+```
+
+### 2. Backend（port 8000）
+
+```powershell
+cd backend
+.\start.ps1
+```
+
+### 3. Frontend（port 3000）
 
 ```powershell
 cd frontend
@@ -31,6 +46,36 @@ npm run dev
 ```
 
 ブラウザで http://localhost:3000 を開く
+
+## データベース構成（ER 図）
+
+```mermaid
+erDiagram
+    tasks {
+        int id PK
+        varchar title
+        text memo
+        tinyint done
+        datetime created_at
+    }
+    books {
+        int id PK
+        varchar title
+        varchar author
+        datetime created_at
+    }
+    book_notes {
+        int id PK
+        int book_id FK
+        text content
+        datetime created_at
+    }
+    books ||--o{ book_notes : "has"
+```
+
+- **tasks** … タスク管理（Day 5〜）
+- **books** … 読書する本（Day 7〜）
+- **book_notes** … 本に紐づくメモ（1対多、CASCADE 削除）
 
 ## 学習カリキュラム
 

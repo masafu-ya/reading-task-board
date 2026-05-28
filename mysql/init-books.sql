@@ -1,19 +1,6 @@
--- Day 5: learning_app データベースと tasks テーブル
-CREATE DATABASE IF NOT EXISTS learning_app
-  DEFAULT CHARACTER SET utf8mb4
-  DEFAULT COLLATE utf8mb4_unicode_ci;
-
+-- Day 7: 読書メモ用テーブル
 USE learning_app;
 
-CREATE TABLE IF NOT EXISTS tasks (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  title VARCHAR(255) NOT NULL,
-  memo TEXT,
-  done TINYINT(1) NOT NULL DEFAULT 0,
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- Day 7: 読書メモ
 CREATE TABLE IF NOT EXISTS books (
   id INT AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(255) NOT NULL,

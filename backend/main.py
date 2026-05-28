@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 import database as db
+import books_db as books
 
 load_dotenv()
 
@@ -37,6 +38,26 @@ class TaskUpdate(BaseModel):
 
 class TaskOut(TaskCreate):
     id: int
+    created_at: datetime
+
+
+class BookCreate(BaseModel):
+    title: str = Field(min_length=1, max_length=255)
+    author: Optional[str] = Field(default=None, max_length=255)
+
+
+class BookOut(BookCreate):
+    id: int
+    created_at: datetime
+
+
+class BookNoteCreate(BaseModel):
+    content: str = Field(min_length=1)
+
+
+class BookNoteOut(BookNoteCreate):
+    id: int
+    book_id: int
     created_at: datetime
 
 
@@ -88,5 +109,53 @@ def toggle_task_done(task_id: int):
 def delete_task(task_id: int):
     try:
         db.delete_task(task_id)
+    except Exception as exc:
+        raise _handle_db_error(exc) from exc
+
+
+@app.get("/books", response_model=list[BookOut])
+def list_books():
+    try:
+        return books.list_books()
+    except Exception as exc:
+        raise _handle_db_error(exc) from exc
+
+
+@app.post("/books", response_model=BookOut)
+def create_book(book: BookCreate):
+    try:
+        return books.create_book(book.title, book.author)
+    except Exception as exc:
+        raise _handle_db_error(exc) from exc
+
+
+@app.get("/books/{book_id}", response_model=BookOut)
+def get_book(book_id: int):
+    try:
+        return books.get_book_by_id(book_id)
+    except Exception as exc:
+        raise _handle_db_error(exc) from exc
+
+
+@app.delete("/books/{book_id}", status_code=204)
+def delete_book(book_id: int):
+    try:
+        books.delete_book(book_id)
+    except Exception as exc:
+        raise _handle_db_error(exc) from exc
+
+
+@app.get("/books/{book_id}/notes", response_model=list[BookNoteOut])
+def list_book_notes(book_id: int):
+    try:
+        return books.list_book_notes(book_id)
+    except Exception as exc:
+        raise _handle_db_error(exc) from exc
+
+
+@app.post("/books/{book_id}/notes", response_model=BookNoteOut)
+def create_book_note(book_id: int, note: BookNoteCreate):
+    try:
+        return books.create_book_note(book_id, note.content)
     except Exception as exc:
         raise _handle_db_error(exc) from exc

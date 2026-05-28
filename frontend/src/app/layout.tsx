@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import AppNav from "@/components/AppNav";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -34,6 +35,7 @@ export default function RootLayout({
             Reading &amp; Task Board
           </h1>
         </header>
+        <AppNav />
         <main className="flex flex-1 flex-col">{children}</main>
       </body>
     </html>
