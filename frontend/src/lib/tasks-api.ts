@@ -13,8 +13,13 @@ function toTask(data: unknown): Task {
   };
 }
 
-export async function fetchTasks(): Promise<Task[]> {
-  const data = await apiGet<unknown[]>("/tasks", "タスク取得に失敗しました");
+export async function fetchTasks(query?: string): Promise<Task[]> {
+  const trimmed = query?.trim();
+  const path =
+    trimmed != null && trimmed.length > 0
+      ? `/tasks?q=${encodeURIComponent(trimmed)}`
+      : "/tasks";
+  const data = await apiGet<unknown[]>(path, "タスク取得に失敗しました");
   if (!Array.isArray(data)) {
     throw new Error("タスク一覧の形式が不正です");
   }

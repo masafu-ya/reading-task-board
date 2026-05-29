@@ -51,11 +51,27 @@ def row_to_task(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def list_tasks() -> list[dict[str, Any]]:
+def list_tasks(query: Optional[str] = None) -> list[dict[str, Any]]:
     with get_cursor() as cursor:
-        cursor.execute(
-            "SELECT id, title, memo, done, created_at FROM tasks ORDER BY id ASC"
-        )
+        if query:
+            pattern = f"%{query}%"
+            cursor.execute(
+                """
+                SELECT id, title, memo, done, created_at
+                FROM tasks
+                WHERE title LIKE %s OR memo LIKE %s
+                ORDER BY id ASC
+                """,
+                (pattern, pattern),
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT id, title, memo, done, created_at
+                FROM tasks
+                ORDER BY id ASC
+                """
+            )
         rows = cursor.fetchall()
     return [row_to_task(row) for row in rows]
 

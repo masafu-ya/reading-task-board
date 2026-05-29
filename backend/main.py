@@ -74,9 +74,12 @@ def health():
 
 
 @app.get("/tasks", response_model=list[TaskOut])
-def list_tasks():
+def list_tasks(q: Optional[str] = None):
     try:
-        return db.list_tasks()
+        search = q.strip() if q else None
+        if search == "":
+            search = None
+        return db.list_tasks(search)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"DB error: {exc}") from exc
 

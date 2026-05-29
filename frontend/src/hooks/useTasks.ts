@@ -10,16 +10,17 @@ import {
 } from "@/lib/tasks-api";
 import type { Task } from "@/types";
 
-/** タスク一覧の取得・追加・更新・削除をまとめたカスタムフック */
+/** タスク一覧の取得・追加・更新・削除・検索をまとめたカスタムフック */
 export function useTasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
     setError(null);
     try {
-      setTasks(await fetchTasks());
+      setTasks(await fetchTasks(searchQuery));
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "タスクの読み込みに失敗しました",
@@ -27,7 +28,7 @@ export function useTasks() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [searchQuery]);
 
   useEffect(() => {
     void reload();
@@ -47,6 +48,8 @@ export function useTasks() {
 
   return {
     tasks,
+    searchQuery,
+    setSearchQuery,
     loading,
     error,
     addTask: (title: string) =>
