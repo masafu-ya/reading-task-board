@@ -6,7 +6,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const styles = {
   primary:
-    "rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50",
+    "rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50",
   secondary:
     "rounded-lg border border-zinc-300 px-3 py-2 text-xs text-zinc-600 hover:bg-zinc-50 disabled:opacity-50",
   "danger-text":
@@ -16,11 +16,12 @@ const styles = {
 export default function Button({
   variant = "primary",
   className = "",
+  type = "button",
   ...props
 }: ButtonProps) {
   return (
     <button
-      type="button"
+      type={type}
       className={`${styles[variant]} ${className}`.trim()}
       {...props}
     />

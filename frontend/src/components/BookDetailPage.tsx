@@ -2,8 +2,13 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
+import Button from "@/components/ui/Button";
+import EmptyState from "@/components/ui/EmptyState";
 import ErrorAlert from "@/components/ui/ErrorAlert";
+import FormSection from "@/components/ui/FormSection";
+import { textareaClassName } from "@/components/ui/inputStyles";
 import LoadingMessage from "@/components/ui/LoadingMessage";
+import PageHeader from "@/components/ui/PageHeader";
 import { useBookNotes } from "@/hooks/useBookNotes";
 
 type BookDetailPageProps = {
@@ -14,12 +19,19 @@ export default function BookDetailPage({ bookId }: BookDetailPageProps) {
   const { book, notes, loading, error, addNote } = useBookNotes(bookId);
   const [content, setContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const trimmed = content.trim();
-    if (!trimmed) return;
+    if (submitting) return;
 
+    if (!trimmed) {
+      setValidationError("メモを入力してください");
+      return;
+    }
+
+    setValidationError(null);
     setSubmitting(true);
     try {
       await addNote(trimmed);
@@ -31,7 +43,7 @@ export default function BookDetailPage({ bookId }: BookDetailPageProps) {
 
   if (loading) {
     return (
-      <div className="px-6 py-10">
+      <div className="mx-auto w-full max-w-lg px-6 py-10">
         <LoadingMessage />
       </div>
     );
@@ -39,9 +51,12 @@ export default function BookDetailPage({ bookId }: BookDetailPageProps) {
 
   if (!book) {
     return (
-      <div className="px-6 py-10 text-center">
-        <p className="text-sm text-red-600">本が見つかりません</p>
-        <Link href="/books" className="mt-4 inline-block text-sm text-blue-600">
+      <div className="mx-auto w-full max-w-lg px-6 py-10 text-center">
+        <EmptyState message="本が見つかりません" />
+        <Link
+          href="/books"
+          className="mt-4 inline-block text-sm text-blue-600 hover:underline"
+        >
           ← 一覧に戻る
         </Link>
       </div>
@@ -55,10 +70,10 @@ export default function BookDetailPage({ bookId }: BookDetailPageProps) {
       </Link>
 
       <div className="mb-8 mt-4">
-        <h2 className="text-2xl font-bold text-zinc-900">{book.title}</h2>
-        {book.author && (
-          <p className="mt-1 text-sm text-zinc-500">著者: {book.author}</p>
-        )}
+        <PageHeader
+          title={book.title}
+          subtitle={book.author ? `著者: ${book.author}` : "読書メモ"}
+        />
       </div>
 
       {error && <ErrorAlert message={error} />}
@@ -66,9 +81,7 @@ export default function BookDetailPage({ bookId }: BookDetailPageProps) {
       <section className="mb-8">
         <h3 className="mb-3 text-sm font-semibold text-zinc-700">メモ一覧</h3>
         {notes.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-zinc-300 bg-zinc-50 px-4 py-8 text-center text-sm text-zinc-500">
-            メモがありません。下のフォームから追加してください。
-          </p>
+          <EmptyState message="メモがありません。下のフォームから追加してください。" />
         ) : (
           <ul className="flex flex-col gap-3">
             {notes.map((note) => (
@@ -83,26 +96,29 @@ export default function BookDetailPage({ bookId }: BookDetailPageProps) {
         )}
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
-        <h3 className="mb-3 text-sm font-semibold text-zinc-700">メモを追加</h3>
+      <FormSection title="メモを追加">
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <textarea
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(e) => {
+              setContent(e.target.value);
+              if (validationError) setValidationError(null);
+            }}
             placeholder="読書メモを入力..."
             rows={3}
             disabled={submitting}
-            className="rounded-lg border border-zinc-300 px-4 py-2.5 text-sm outline-none ring-blue-500 focus:border-blue-500 focus:ring-2"
+            className={textareaClassName}
           />
-          <button
-            type="submit"
-            disabled={submitting}
-            className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-          >
+          <Button type="submit" disabled={submitting}>
             {submitting ? "追加中..." : "メモを追加"}
-          </button>
+          </Button>
+          {validationError && (
+            <p className="text-sm text-red-600" role="alert">
+              {validationError}
+            </p>
+          )}
         </form>
-      </section>
+      </FormSection>
     </div>
   );
 }

@@ -37,6 +37,9 @@ export default function RootLayout({
         </header>
         <AppNav />
         <main className="flex flex-1 flex-col">{children}</main>
+        <footer className="border-t border-zinc-200 bg-white px-6 py-3 text-center text-xs text-zinc-500">
+          Reading &amp; Task Board v0.1.0 — 学習用・非公開
+        </footer>
       </body>
     </html>
   );

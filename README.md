@@ -152,7 +152,11 @@ erDiagram
 
 ## 学習カリキュラム
 
-`LEARNING_CURRICULUM.md` を参照（10日間）
+`LEARNING_CURRICULUM.md` を参照（10日間）。振り返りは `REFLECTION.md` を参照。
+
+## バージョン
+
+- **v0.1.0** … 10日間カリキュラム完成版（タスク + 読書メモ + 検索）
 
 ## 注意
 

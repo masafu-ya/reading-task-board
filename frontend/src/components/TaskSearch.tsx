@@ -1,5 +1,7 @@
 "use client";
 
+import { inputClassName } from "@/components/ui/inputStyles";
+
 type TaskSearchProps = {
   value: string;
   onChange: (value: string) => void;
@@ -24,7 +26,7 @@ export default function TaskSearch({
         onChange={(e) => onChange(e.target.value)}
         placeholder="タイトルやメモで検索..."
         disabled={disabled}
-        className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm outline-none ring-blue-500 focus:border-blue-500 focus:ring-2 disabled:bg-zinc-100"
+        className={inputClassName}
       />
     </div>
   );
