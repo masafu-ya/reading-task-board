@@ -2,6 +2,7 @@
 
 import TaskForm from "@/components/TaskForm";
 import TaskList from "@/components/TaskList";
+import TaskSearch from "@/components/TaskSearch";
 import ErrorAlert from "@/components/ui/ErrorAlert";
 import LoadingMessage from "@/components/ui/LoadingMessage";
 import PageHeader from "@/components/ui/PageHeader";
@@ -10,6 +11,8 @@ import { useTasks } from "@/hooks/useTasks";
 export default function TaskBoard() {
   const {
     tasks,
+    searchQuery,
+    setSearchQuery,
     loading,
     error,
     addTask,
@@ -22,7 +25,7 @@ export default function TaskBoard() {
     <div className="mx-auto w-full max-w-lg px-6 py-10">
       <PageHeader
         title="タスク一覧"
-        subtitle="Day 8 — hooks とコンポーネント整理"
+        subtitle="Day 9 — 検索機能（SQL LIKE）+ GitHub フロー"
       />
 
       {error && (
@@ -32,9 +35,21 @@ export default function TaskBoard() {
         />
       )}
 
+      <TaskSearch
+        value={searchQuery}
+        onChange={setSearchQuery}
+        disabled={loading}
+      />
+
       <section className="mb-8">
         {loading ? (
           <LoadingMessage />
+        ) : tasks.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-zinc-300 bg-zinc-50 px-4 py-8 text-center text-sm text-zinc-500">
+            {searchQuery.trim()
+              ? "検索結果がありません"
+              : "タスクがありません。下のフォームから追加してください。"}
+          </p>
         ) : (
           <TaskList
             tasks={tasks}
