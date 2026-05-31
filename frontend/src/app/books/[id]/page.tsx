@@ -1,4 +1,5 @@
 import BookDetailPage from "@/components/BookDetailPage";
+import RequireAuth from "@/components/RequireAuth";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -16,5 +17,9 @@ export default async function BookPage({ params }: PageProps) {
     );
   }
 
-  return <BookDetailPage bookId={bookId} />;
+  return (
+    <RequireAuth>
+      <BookDetailPage bookId={bookId} />
+    </RequireAuth>
+  );
 }

@@ -58,28 +58,30 @@ def row_to_note(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def list_books() -> list[dict[str, Any]]:
+def list_books(user_id: int) -> list[dict[str, Any]]:
     with get_cursor() as cursor:
         cursor.execute(
             """
             SELECT id, title, author, created_at
             FROM books
+            WHERE user_id = %s
             ORDER BY id ASC
-            """
+            """,
+            (user_id,),
         )
         rows = cursor.fetchall()
     return [row_to_book(row) for row in rows]
 
 
-def get_book_by_id(book_id: int) -> dict[str, Any]:
+def get_book_by_id(book_id: int, user_id: int) -> dict[str, Any]:
     with get_cursor() as cursor:
         cursor.execute(
             """
             SELECT id, title, author, created_at
             FROM books
-            WHERE id = %s
+            WHERE id = %s AND user_id = %s
             """,
-            (book_id,),
+            (book_id, user_id),
         )
         row = cursor.fetchone()
     if row is None:
@@ -87,28 +89,31 @@ def get_book_by_id(book_id: int) -> dict[str, Any]:
     return row_to_book(row)
 
 
-def create_book(title: str, author: Optional[str]) -> dict[str, Any]:
+def create_book(user_id: int, title: str, author: Optional[str]) -> dict[str, Any]:
     with get_cursor() as cursor:
         cursor.execute(
             """
-            INSERT INTO books (title, author)
-            VALUES (%s, %s)
+            INSERT INTO books (title, author, user_id)
+            VALUES (%s, %s, %s)
             """,
-            (title, author),
+            (title, author, user_id),
         )
         book_id = cursor.lastrowid
-    return get_book_by_id(book_id)
+    return get_book_by_id(book_id, user_id)
 
 
-def delete_book(book_id: int) -> None:
+def delete_book(book_id: int, user_id: int) -> None:
     with get_cursor() as cursor:
-        cursor.execute("DELETE FROM books WHERE id = %s", (book_id,))
+        cursor.execute(
+            "DELETE FROM books WHERE id = %s AND user_id = %s",
+            (book_id, user_id),
+        )
         if cursor.rowcount == 0:
             raise LookupError(f"Book {book_id} not found")
 
 
-def list_book_notes(book_id: int) -> list[dict[str, Any]]:
-    get_book_by_id(book_id)
+def list_book_notes(book_id: int, user_id: int) -> list[dict[str, Any]]:
+    get_book_by_id(book_id, user_id)
     with get_cursor() as cursor:
         cursor.execute(
             """
@@ -123,8 +128,8 @@ def list_book_notes(book_id: int) -> list[dict[str, Any]]:
     return [row_to_note(row) for row in rows]
 
 
-def create_book_note(book_id: int, content: str) -> dict[str, Any]:
-    get_book_by_id(book_id)
+def create_book_note(book_id: int, user_id: int, content: str) -> dict[str, Any]:
+    get_book_by_id(book_id, user_id)
     with get_cursor() as cursor:
         cursor.execute(
             """

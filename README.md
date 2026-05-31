@@ -152,11 +152,33 @@ erDiagram
 
 ## 学習カリキュラム
 
-`LEARNING_CURRICULUM.md` を参照（10日間）。振り返りは `REFLECTION.md` を参照。
+- **Part 1（Day 0〜10）**: `LEARNING_CURRICULUM.md` — v0.1.0 まで
+- **Part 2（Day 11〜15）**: 同ファイル Part 2 セクション — 認証・テスト・Docker・デプロイ（v0.2.0）
+- 振り返り: `REFLECTION.md`
 
 ## バージョン
 
 - **v0.1.0** … 10日間カリキュラム完成版（タスク + 読書メモ + 検索）
+- **v0.2.0 開発中** … Day 11 以降: JWT 認証・テスト・Docker・デプロイ
+
+## Day 11: 認証（JWT）セットアップ
+
+既存 DB を使っている場合、マイグレーションを **1 回** 実行してください。
+
+```powershell
+cd backend
+.\venv\Scripts\activate
+pip install -r requirements.txt
+cd ..
+.\mysql\migrate-day11.ps1
+```
+
+`backend/.env` に以下を追加（`.env.example` 参照）:
+
+| 変数 | 説明 |
+|------|------|
+| JWT_SECRET | 長いランダム文字列（Git に含めない） |
+| JWT_EXPIRE_MINUTES | トークン有効期限（分） |
 
 ## 注意
 

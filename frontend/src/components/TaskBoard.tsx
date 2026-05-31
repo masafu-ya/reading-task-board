@@ -27,7 +27,7 @@ export default function TaskBoard() {
     <div className="mx-auto w-full max-w-lg px-6 py-10">
       <PageHeader
         title="タスク一覧"
-        subtitle="日々のやること — 追加・完了・検索"
+        subtitle="日々のやること — 追加・完了・検索（ログイン必須）"
       />
 
       {error && (
