@@ -51,7 +51,7 @@ def row_to_task(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def list_tasks(query: Optional[str] = None) -> list[dict[str, Any]]:
+def list_tasks(user_id: int, query: Optional[str] = None) -> list[dict[str, Any]]:
     with get_cursor() as cursor:
         if query:
             pattern = f"%{query}%"
@@ -59,45 +59,52 @@ def list_tasks(query: Optional[str] = None) -> list[dict[str, Any]]:
                 """
                 SELECT id, title, memo, done, created_at
                 FROM tasks
-                WHERE title LIKE %s OR memo LIKE %s
+                WHERE user_id = %s AND (title LIKE %s OR memo LIKE %s)
                 ORDER BY id ASC
                 """,
-                (pattern, pattern),
+                (user_id, pattern, pattern),
             )
         else:
             cursor.execute(
                 """
                 SELECT id, title, memo, done, created_at
                 FROM tasks
+                WHERE user_id = %s
                 ORDER BY id ASC
-                """
+                """,
+                (user_id,),
             )
         rows = cursor.fetchall()
     return [row_to_task(row) for row in rows]
 
 
-def create_task(title: str, memo: Optional[str], done: bool) -> dict[str, Any]:
+def create_task(
+    user_id: int,
+    title: str,
+    memo: Optional[str],
+    done: bool,
+) -> dict[str, Any]:
     with get_cursor() as cursor:
         cursor.execute(
             """
-            INSERT INTO tasks (title, memo, done)
-            VALUES (%s, %s, %s)
+            INSERT INTO tasks (title, memo, done, user_id)
+            VALUES (%s, %s, %s, %s)
             """,
-            (title, memo, int(done)),
+            (title, memo, int(done), user_id),
         )
         task_id = cursor.lastrowid
-    return get_task_by_id(task_id)
+    return get_task_by_id(task_id, user_id)
 
 
-def get_task_by_id(task_id: int) -> dict[str, Any]:
+def get_task_by_id(task_id: int, user_id: int) -> dict[str, Any]:
     with get_cursor() as cursor:
         cursor.execute(
             """
             SELECT id, title, memo, done, created_at
             FROM tasks
-            WHERE id = %s
+            WHERE id = %s AND user_id = %s
             """,
-            (task_id,),
+            (task_id, user_id),
         )
         row = cursor.fetchone()
     if row is None:
@@ -105,38 +112,49 @@ def get_task_by_id(task_id: int) -> dict[str, Any]:
     return row_to_task(row)
 
 
-def update_task(task_id: int, title: str, memo: Optional[str]) -> dict[str, Any]:
+def update_task(
+    task_id: int,
+    user_id: int,
+    title: str,
+    memo: Optional[str],
+) -> dict[str, Any]:
     with get_cursor() as cursor:
         cursor.execute(
             """
             UPDATE tasks
             SET title = %s, memo = %s
-            WHERE id = %s
+            WHERE id = %s AND user_id = %s
             """,
-            (title, memo, task_id),
+            (title, memo, task_id, user_id),
         )
         if cursor.rowcount == 0:
             raise LookupError(f"Task {task_id} not found")
-    return get_task_by_id(task_id)
+    return get_task_by_id(task_id, user_id)
 
 
-def toggle_task_done(task_id: int) -> dict[str, Any]:
+def toggle_task_done(task_id: int, user_id: int) -> dict[str, Any]:
     with get_cursor() as cursor:
-        cursor.execute("SELECT done FROM tasks WHERE id = %s", (task_id,))
+        cursor.execute(
+            "SELECT done FROM tasks WHERE id = %s AND user_id = %s",
+            (task_id, user_id),
+        )
         row = cursor.fetchone()
         if row is None:
             raise LookupError(f"Task {task_id} not found")
         new_done = 0 if row["done"] else 1
         cursor.execute(
-            "UPDATE tasks SET done = %s WHERE id = %s",
-            (new_done, task_id),
+            "UPDATE tasks SET done = %s WHERE id = %s AND user_id = %s",
+            (new_done, task_id, user_id),
         )
-    return get_task_by_id(task_id)
+    return get_task_by_id(task_id, user_id)
 
 
-def delete_task(task_id: int) -> None:
+def delete_task(task_id: int, user_id: int) -> None:
     with get_cursor() as cursor:
-        cursor.execute("DELETE FROM tasks WHERE id = %s", (task_id,))
+        cursor.execute(
+            "DELETE FROM tasks WHERE id = %s AND user_id = %s",
+            (task_id, user_id),
+        )
         if cursor.rowcount == 0:
             raise LookupError(f"Task {task_id} not found")
 

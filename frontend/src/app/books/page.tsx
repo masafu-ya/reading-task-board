@@ -1,5 +1,10 @@
 import BookListPage from "@/components/BookListPage";
+import RequireAuth from "@/components/RequireAuth";
 
 export default function BooksPage() {
-  return <BookListPage />;
+  return (
+    <RequireAuth>
+      <BookListPage />
+    </RequireAuth>
+  );
 }
