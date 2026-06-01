@@ -46,7 +46,7 @@ Day 14 では **Backend + MySQL** をクラウドに載せます。Frontend は 
 
 Import 直後に **1 回デプロイが走ります**。MySQL や環境変数がまだ無いと **Build は成功しても起動で失敗** することがあります（正常な流れです）。
 
-Railway 向けの設定は **`backend/railway.toml`** と **`backend/Dockerfile`** です（monorepo の公式パターン）。
+Railway 向けの設定は **`Dockerfile.railway`**（リポジトリルート）と **`railway.toml`** です。**Root Directory は空のまま**で動きます。
 
 ### 2. MySQL サービスを追加
 
@@ -72,23 +72,22 @@ Import で作られたサービスが Backend です。
 
 #### 4-1. Source（Root Directory）
 
-**Settings** → **Source** → **Add Root Directory** をクリックし、次を入力:
+**Settings** → **Source** で **Root Directory が空**であることを確認します。
 
-```
-backend
-```
-
-保存すると「Root Directory: `/backend`」と表示されます。
+- 「Add Root Directory」と表示 → ✅ OK（未設定）
+- 「Root Directory: `/backend`」と表示 → ❌ **Remove** して空に戻す
 
 #### 4-2. Build
 
-**Settings** → **Build** が次になっていることを確認:
+**Settings** → **Build**:
 
 | 項目 | 設定値 |
 |------|--------|
 | **Builder** | **Dockerfile** |
-| **Dockerfile** | `Dockerfile`（`backend` フォルダ内） |
-| **Config file** | `/backend/railway.toml`（表示されていれば OK） |
+| **Dockerfile Path** | `Dockerfile.railway` |
+| **Config file** | `/railway.toml`（表示されていれば OK） |
+
+Build 画面に `The value is set in /railway.toml` と出ていれば正しいです。
 
 #### 4-3. ドメイン
 
@@ -168,9 +167,9 @@ Render の無料 MySQL は制限があるため、学習用は **Railway MySQL**
 
 | Build Logs の内容 | 原因 | 対処 |
 |-------------------|------|------|
-| `requirements.txt not found` | Root Directory 未設定 | Source → Root Directory に **`backend`** を設定 |
-| `backend/requirements.txt not found` | ルート Dockerfile と Root Directory の不一致 | Root Directory を **`backend`** にし、`backend/Dockerfile` を使う |
-| `Dockerfile does not exist` | Root Directory と Dockerfile の場所が不一致 | Root Directory = `backend`、Dockerfile = `Dockerfile` |
+| `requirements.txt not found` | Root Directory が `backend` のまま | Source → Root Directory を **削除して空**に |
+| `backend/requirements.txt not found` | Dockerfile と Root Directory の不一致 | Root Directory **空** + Dockerfile Path = **`Dockerfile.railway`** |
+| `Dockerfile does not exist` | Dockerfile Path が `Dockerfile` のまま | Dockerfile Path を **`Dockerfile.railway`** に変更 |
 | Build が 2 秒で失敗（ログがほぼ空） | Dockerfile の改行コードが CRLF（Windows） | 最新の `master` を pull（LF 修正済み）して Redeploy |
 | `Nixpacks` / `npm install` 失敗 | Frontend まで含めて自動判定された | Builder を **Dockerfile** に変更 |
 | Build 成功 → Deploy 失敗 / Crash | **MySQL や JWT 未設定** | 下記「5. 環境変数」を設定して **Redeploy** |
