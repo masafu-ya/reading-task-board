@@ -74,6 +74,24 @@ npm run dev
 
 ブラウザで http://localhost:3000 を開く
 
+## テストの実行（Day 12）
+
+**Backend（pytest）** — MySQL 起動が必要
+
+```powershell
+cd backend
+.\venv\Scripts\activate
+pip install -r requirements-dev.txt
+pytest -v
+```
+
+**Frontend（Vitest）**
+
+```powershell
+cd frontend
+npm test
+```
+
 ## 環境変数一覧
 
 ### backend/.env
