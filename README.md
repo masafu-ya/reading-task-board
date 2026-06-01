@@ -157,6 +157,7 @@ npm test
 │       └── types/         # TypeScript 型定義
 ├── backend/               # FastAPI
 ├── mysql/                 # MySQL 起動スクリプト・SQL
+├── DEPLOY.md              # Day 14〜15: デプロイ手順
 ├── LEARNING_CURRICULUM.md
 └── README.md
 ```
@@ -221,6 +222,16 @@ cd ..
 |------|------|
 | JWT_SECRET | 長いランダム文字列（Git に含めない） |
 | JWT_EXPIRE_MINUTES | トークン有効期限（分） |
+| CORS_ORIGINS | `https://your-app.vercel.app` | 本番フロント URL（カンマ区切り・Day 14） |
+
+## Day 14: 本番デプロイ（Backend + DB）
+
+**`DEPLOY.md`** に Railway / Render への手順があります。
+
+1. Railway で MySQL + Backend（Dockerfile）をデプロイ
+2. `mysql/init.sql` をクラウド DB に適用
+3. `curl https://YOUR-API/health` で確認
+4. ローカル Frontend から本番 API を試す場合は `frontend/.env.local` の `NEXT_PUBLIC_API_URL` を一時変更
 
 ## 注意
 
