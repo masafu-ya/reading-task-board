@@ -8,6 +8,7 @@ from pydantic import BaseModel, EmailStr, Field
 
 import auth
 import books_db as books
+import cors_settings
 import database as db
 import users_db as users
 
@@ -17,10 +18,7 @@ app = FastAPI(title="Reading & Task Board API (Learning)")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=cors_settings.get_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
