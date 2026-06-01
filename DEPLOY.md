@@ -46,7 +46,7 @@ Day 14 では **Backend + MySQL** をクラウドに載せます。Frontend は 
 
 Import 直後に **1 回デプロイが走ります**。MySQL や環境変数がまだ無いと **Build は成功しても起動で失敗** することがあります（正常な流れです）。
 
-リポジトリにはルートの **`Dockerfile`** と **`railway.toml`** があり、Import 時に Backend としてビルドされます。
+Railway 向けの設定は **`backend/railway.toml`** と **`backend/Dockerfile`** です（monorepo の公式パターン）。
 
 ### 2. MySQL サービスを追加
 
@@ -68,21 +68,35 @@ PowerShell から Railway の公開 TCP プロキシを使う場合は、Railway
 
 ### 4. Backend サービス（Import 済みの場合）
 
-Import で作られたサービスが Backend です。別途追加し直す必要は通常ありません。
+Import で作られたサービスが Backend です。
 
-**Settings → Build** を次のとおりに設定してください（ここを間違えると Build image 失敗になります）:
+#### 4-1. Source（Root Directory）
+
+**Settings** → **Source** → **Add Root Directory** をクリックし、次を入力:
+
+```
+backend
+```
+
+保存すると「Root Directory: `/backend`」と表示されます。
+
+#### 4-2. Build
+
+**Settings** → **Build** が次になっていることを確認:
 
 | 項目 | 設定値 |
 |------|--------|
-| **Root Directory** | **空**（`/backend` にしない） |
 | **Builder** | **Dockerfile** |
-| **Dockerfile Path** | `Dockerfile`（リポジトリ**ルート**） |
-| **Docker Context** | 空（デフォルト＝リポジトリルート） |
+| **Dockerfile** | `Dockerfile`（`backend` フォルダ内） |
+| **Config file** | `/backend/railway.toml`（表示されていれば OK） |
 
-> **注意**: Root Directory を `backend` にすると、ルートの `Dockerfile` と矛盾して `COPY backend/requirements.txt` が失敗します。  
-> `backend/Dockerfile` を使う場合は Root Directory を `backend` にし、Dockerfile Path を `Dockerfile`（backend 内）にしてください。両方を混在させないこと。
+#### 4-3. ドメイン
 
-2. **Settings** → **Networking** → **Generate Domain**（HTTPS URL を取得）
+**Settings** → **Networking** → **Generate Domain**（HTTPS URL を取得）
+
+#### 4-4. Redeploy
+
+**Deployments** → **Deploy** / **Redeploy**
 
 ### 5. Backend の環境変数
 
@@ -154,8 +168,9 @@ Render の無料 MySQL は制限があるため、学習用は **Railway MySQL**
 
 | Build Logs の内容 | 原因 | 対処 |
 |-------------------|------|------|
-| `requirements.txt not found` | Dockerfile と Root Directory の不一致 | Root Directory を**空**に、Dockerfile Path を **`Dockerfile`**（ルート）に |
-| `backend/requirements.txt not found` | Root Directory が `backend` なのにルート Dockerfile を使用 | Root Directory を**空**にする **または** Dockerfile Path を `backend/Dockerfile` + Root Directory `backend` |
+| `requirements.txt not found` | Root Directory 未設定 | Source → Root Directory に **`backend`** を設定 |
+| `backend/requirements.txt not found` | ルート Dockerfile と Root Directory の不一致 | Root Directory を **`backend`** にし、`backend/Dockerfile` を使う |
+| `Dockerfile does not exist` | Root Directory と Dockerfile の場所が不一致 | Root Directory = `backend`、Dockerfile = `Dockerfile` |
 | `Nixpacks` / `npm install` 失敗 | Frontend まで含めて自動判定された | Builder を **Dockerfile** に変更 |
 | Build 成功 → Deploy 失敗 / Crash | **MySQL や JWT 未設定** | 下記「5. 環境変数」を設定して **Redeploy** |
 | `database: disconnected` | DB 未接続 or init.sql 未実行 | MySQL 追加 + `init.sql` 適用 |
