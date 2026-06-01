@@ -70,12 +70,19 @@ PowerShell から Railway の公開 TCP プロキシを使う場合は、Railway
 
 Import で作られたサービスが Backend です。別途追加し直す必要は通常ありません。
 
-1. サービスをクリック → **Settings** → **Build**:
-   - Builder: **Dockerfile**
-   - Dockerfile Path: `Dockerfile`（リポジトリルート）
-2. **Settings** → **Networking** → **Generate Domain**（HTTPS URL を取得）
+**Settings → Build** を次のとおりに設定してください（ここを間違えると Build image 失敗になります）:
 
-（旧手順: `backend/Dockerfile` + Docker Context `backend` でも可）
+| 項目 | 設定値 |
+|------|--------|
+| **Root Directory** | **空**（`/backend` にしない） |
+| **Builder** | **Dockerfile** |
+| **Dockerfile Path** | `Dockerfile`（リポジトリ**ルート**） |
+| **Docker Context** | 空（デフォルト＝リポジトリルート） |
+
+> **注意**: Root Directory を `backend` にすると、ルートの `Dockerfile` と矛盾して `COPY backend/requirements.txt` が失敗します。  
+> `backend/Dockerfile` を使う場合は Root Directory を `backend` にし、Dockerfile Path を `Dockerfile`（backend 内）にしてください。両方を混在させないこと。
+
+2. **Settings** → **Networking** → **Generate Domain**（HTTPS URL を取得）
 
 ### 5. Backend の環境変数
 
@@ -147,7 +154,8 @@ Render の無料 MySQL は制限があるため、学習用は **Railway MySQL**
 
 | Build Logs の内容 | 原因 | 対処 |
 |-------------------|------|------|
-| `requirements.txt not found` | Dockerfile のパス／Context 不一致 | Settings → Build → Dockerfile Path を **`Dockerfile`**（ルート）に |
+| `requirements.txt not found` | Dockerfile と Root Directory の不一致 | Root Directory を**空**に、Dockerfile Path を **`Dockerfile`**（ルート）に |
+| `backend/requirements.txt not found` | Root Directory が `backend` なのにルート Dockerfile を使用 | Root Directory を**空**にする **または** Dockerfile Path を `backend/Dockerfile` + Root Directory `backend` |
 | `Nixpacks` / `npm install` 失敗 | Frontend まで含めて自動判定された | Builder を **Dockerfile** に変更 |
 | Build 成功 → Deploy 失敗 / Crash | **MySQL や JWT 未設定** | 下記「5. 環境変数」を設定して **Redeploy** |
 | `database: disconnected` | DB 未接続 or init.sql 未実行 | MySQL 追加 + `init.sql` 適用 |
