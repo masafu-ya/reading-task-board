@@ -49,6 +49,30 @@ npm install
 
 ## 起動方法（毎回）
 
+**方法 A: 従来どおり（PowerShell）** — MySQL → Backend → Frontend の順
+
+**方法 B: Docker Compose（Day 13〜）** — 1 コマンドで 3 サービス起動
+
+```powershell
+cd "D:\cursolアプリ\サンプルプロジェクト１"
+.\docker-start.ps1
+```
+
+| URL | 用途 |
+|-----|------|
+| http://localhost:3000 | Frontend |
+| http://localhost:8000/docs | Backend API |
+
+**Docker 利用時の注意**
+
+- `backend/.env` が必要（`DB_PASSWORD` 等）
+- Docker の MySQL はホストの **3307** ポート（ローカル MySQL の 3306 と競合しない）
+- 従来起動と Docker は **どちらか一方** で十分（両方の Backend を同時起動しない）
+
+---
+
+### 方法 A: 従来起動（PowerShell）
+
 **順番が重要**: MySQL → Backend → Frontend
 
 ### 1. MySQL
