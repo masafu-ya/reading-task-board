@@ -44,6 +44,10 @@ Day 14 では **Backend + MySQL** をクラウドに載せます。Frontend は 
 2. GitHub 連携
 3. このリポジトリ（`reading-task-board`）を Railway から Import
 
+Import 直後に **1 回デプロイが走ります**。MySQL や環境変数がまだ無いと **Build は成功しても起動で失敗** することがあります（正常な流れです）。
+
+リポジトリにはルートの **`Dockerfile`** と **`railway.toml`** があり、Import 時に Backend としてビルドされます。
+
 ### 2. MySQL サービスを追加
 
 1. プロジェクト → **+ New** → **Database** → **MySQL**
@@ -62,15 +66,16 @@ mysql -h YOUR_MYSQL_HOST -P YOUR_PORT -u root -p YOUR_DATABASE < mysql/init.sql
 
 PowerShell から Railway の公開 TCP プロキシを使う場合は、Railway ダッシュボードの Connect タブの手順に従ってください。
 
-### 4. Backend サービスを追加
+### 4. Backend サービス（Import 済みの場合）
 
-1. **+ New** → **GitHub Repo** → 同じリポジトリ
-2. **Settings** → **Root Directory** は空（リポジトリルート）
-3. **Settings** → **Build**:
+Import で作られたサービスが Backend です。別途追加し直す必要は通常ありません。
+
+1. サービスをクリック → **Settings** → **Build**:
    - Builder: **Dockerfile**
-   - Dockerfile Path: `backend/Dockerfile`
-   - Docker Context: `backend`
-4. **Settings** → **Networking** → **Generate Domain**（HTTPS URL を取得）
+   - Dockerfile Path: `Dockerfile`（リポジトリルート）
+2. **Settings** → **Networking** → **Generate Domain**（HTTPS URL を取得）
+
+（旧手順: `backend/Dockerfile` + Docker Context `backend` でも可）
 
 ### 5. Backend の環境変数
 
@@ -137,6 +142,21 @@ Render の無料 MySQL は制限があるため、学習用は **Railway MySQL**
 ---
 
 ## トラブルシューティング
+
+### Import 直後のデプロイ失敗（よくある）
+
+| Build Logs の内容 | 原因 | 対処 |
+|-------------------|------|------|
+| `requirements.txt not found` | Dockerfile のパス／Context 不一致 | Settings → Build → Dockerfile Path を **`Dockerfile`**（ルート）に |
+| `Nixpacks` / `npm install` 失敗 | Frontend まで含めて自動判定された | Builder を **Dockerfile** に変更 |
+| Build 成功 → Deploy 失敗 / Crash | **MySQL や JWT 未設定** | 下記「5. 環境変数」を設定して **Redeploy** |
+| `database: disconnected` | DB 未接続 or init.sql 未実行 | MySQL 追加 + `init.sql` 適用 |
+
+**ログの見方**: サービス → **Deployments** → 失敗した行 → **View Logs**（Build / Deploy タブ）
+
+**再デプロイ**: 設定を直したら **Deploy** → **Redeploy**（または GitHub に push）
+
+### その他
 
 | 症状 | 確認 |
 |------|------|
