@@ -1,0 +1,4 @@
+Dockerfile text eol=lf
+**/Dockerfile text eol=lf
+railway.toml text eol=lf
+**/railway.toml text eol=lf
