@@ -1,4 +1,4 @@
-# Railway 用（リポジトリルートからビルド。Root Directory 設定不要）
+# Railway (repo root). Root Directory: leave empty.
 FROM python:3.12-slim
 
 WORKDIR /app
