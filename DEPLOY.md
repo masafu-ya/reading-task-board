@@ -171,6 +171,7 @@ Render の無料 MySQL は制限があるため、学習用は **Railway MySQL**
 | `requirements.txt not found` | Root Directory 未設定 | Source → Root Directory に **`backend`** を設定 |
 | `backend/requirements.txt not found` | ルート Dockerfile と Root Directory の不一致 | Root Directory を **`backend`** にし、`backend/Dockerfile` を使う |
 | `Dockerfile does not exist` | Root Directory と Dockerfile の場所が不一致 | Root Directory = `backend`、Dockerfile = `Dockerfile` |
+| Build が 2 秒で失敗（ログがほぼ空） | Dockerfile の改行コードが CRLF（Windows） | 最新の `master` を pull（LF 修正済み）して Redeploy |
 | `Nixpacks` / `npm install` 失敗 | Frontend まで含めて自動判定された | Builder を **Dockerfile** に変更 |
 | Build 成功 → Deploy 失敗 / Crash | **MySQL や JWT 未設定** | 下記「5. 環境変数」を設定して **Redeploy** |
 | `database: disconnected` | DB 未接続 or init.sql 未実行 | MySQL 追加 + `init.sql` 適用 |
