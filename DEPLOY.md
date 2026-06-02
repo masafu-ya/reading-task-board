@@ -46,7 +46,7 @@ Day 14 では **Backend + MySQL** をクラウドに載せます。Frontend は 
 
 Import 直後に **1 回デプロイが走ります**。MySQL や環境変数がまだ無いと **Build は成功しても起動で失敗** することがあります（正常な流れです）。
 
-Railway 向けの設定はルートの **`Dockerfile`** と **`railway.toml`** です。**Root Directory は空のまま**で動きます。
+Railway 公式の monorepo 手順に従い、Backend の **Root Directory を `/backend`** に設定します。設定ファイルは **`backend/railway.toml`** と **`backend/Dockerfile`** です。
 
 ### 2. MySQL サービスを追加
 
@@ -70,34 +70,32 @@ PowerShell から Railway の公開 TCP プロキシを使う場合は、Railway
 
 Import で作られたサービスが Backend です。
 
-#### 4-1. Source（Root Directory）
+#### 4-1. Source（Root Directory）— 最重要
 
-**Settings** → **Source** で **Root Directory が空**であることを確認します。
+**Settings** → **Source** → **Add Root Directory** をクリックし、次を入力:
 
-- 「Add Root Directory」と表示 → ✅ OK（未設定）
-- 「Root Directory: `/backend`」と表示 → ❌ **Remove** して空に戻す
+```
+backend
+```
 
-#### 4-2. Build
+保存すると **Root Directory: `/backend`** と表示されます。
+
+> Railway 公式 monorepo 手順: Backend は `/backend` フォルダだけをビルドします。
+
+#### 4-2. Variables — 古い変数を削除
+
+**Variables** タブで **`RAILWAY_DOCKERFILE_PATH`** がある場合は **削除**してください（⋮ メニュー → Delete）。
+
+この変数があると、存在しないルートの `Dockerfile` を探して **2 秒で Build 失敗** します。
+
+#### 4-3. Build
 
 **Settings** → **Build**:
 
 | 項目 | 設定値 |
 |------|--------|
-| **Builder** | **Dockerfile** |
-| **Dockerfile Path** | `Dockerfile`（リポジトリルート） |
-| **Config file** | `/railway.toml`（表示されていれば OK） |
-
-Build 画面に `The value is set in /railway.toml` と出ていれば正しいです。
-
-#### 4-3. Variables（ビルド失敗時の必須設定）
-
-**Settings** → **Variables** に次を **1 つ** 追加してください（3 秒で Build 失敗する場合の対策）:
-
-| 変数 | 値 |
-|------|-----|
-| `RAILWAY_DOCKERFILE_PATH` | `Dockerfile` |
-
-Railway が Dockerfile を見つけられないとき、この変数で明示的に指定します。
+| **Builder** | **Dockerfile**（Automatically Detected） |
+| **Dockerfile Path** | `Dockerfile`（`backend` フォルダ内） |
 
 #### 4-4. ドメイン
 
@@ -177,11 +175,9 @@ Render の無料 MySQL は制限があるため、学習用は **Railway MySQL**
 
 | Build Logs の内容 | 原因 | 対処 |
 |-------------------|------|------|
-| `requirements.txt not found` | Root Directory が `backend` のまま | Source → Root Directory を **削除して空**に |
-| `backend/requirements.txt not found` | Root Directory が `backend` のまま | Source → Root Directory を **削除して空**に |
-| `Dockerfile does not exist` | 古い Dockerfile パスを参照 | Dockerfile Path = **`Dockerfile`**（ルート） |
-| Build が数秒で失敗 | Dockerfile 未検出 | Variables に `RAILWAY_DOCKERFILE_PATH=Dockerfile` を追加 |
-| `failed to read Dockerfile` | 上記と同じ | Root Directory **空** + 変数追加 + Redeploy |
+| `requirements.txt not found` | Root Directory が空 | Source → Root Directory に **`backend`** を設定 |
+| `Dockerfile does not exist` | `RAILWAY_DOCKERFILE_PATH` が残っている | Variables から **削除** |
+| Build が数秒で失敗 | ルート Dockerfile を参照している | Root Directory = **`backend`** + 上記変数削除 |
 | `Nixpacks` / `npm install` 失敗 | Frontend まで含めて自動判定された | Builder を **Dockerfile** に変更 |
 | Build 成功 → Deploy 失敗 / Crash | **MySQL や JWT 未設定** | 下記「5. 環境変数」を設定して **Redeploy** |
 | `database: disconnected` | DB 未接続 or init.sql 未実行 | MySQL 追加 + `init.sql` 適用 |
@@ -192,18 +188,10 @@ Render の無料 MySQL は制限があるため、学習用は **Railway MySQL**
 
 ### それでも Build が 3 秒で失敗する場合
 
-GitHub 上では Docker ビルドは成功しています（Actions の `Verify Railway Docker build`）。Railway 側の設定ずれが原因のことが多いです。
-
-1. **Variables** に `RAILWAY_DOCKERFILE_PATH` = `Dockerfile` を追加
-2. **Source** → Root Directory を **空**にする
+1. **Variables** から `RAILWAY_DOCKERFILE_PATH` を **削除**
+2. **Source** → Root Directory = **`backend`**
 3. **Redeploy**
-4. まだ失敗 → **Backend サービスを作り直す**:
-   - 失敗している Backend サービスを Delete
-   - **+ New** → **GitHub Repo** → 同じリポジトリ
-   - Import 後すぐ **Variables** に `RAILWAY_DOCKERFILE_PATH=Dockerfile` を設定
-   - MySQL 環境変数を再設定 → **Redeploy**
-
-Build ログに `pip install` や `FROM python` が **30 秒以上** 表示されれば成功に近い状態です。
+4. Build ログに `pip install` が 30 秒以上出るか確認
 
 ### その他
 
