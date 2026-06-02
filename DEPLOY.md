@@ -46,7 +46,7 @@ Day 14 では **Backend + MySQL** をクラウドに載せます。Frontend は 
 
 Import 直後に **1 回デプロイが走ります**。MySQL や環境変数がまだ無いと **Build は成功しても起動で失敗** することがあります（正常な流れです）。
 
-Railway 向けの設定は **`docker/railway/Dockerfile`** と **`railway.json`** です。**Root Directory は空のまま**で動きます。
+Railway 向けの設定はルートの **`Dockerfile`** と **`railway.json`** です。**Root Directory は空のまま**で動きます。
 
 ### 2. MySQL サービスを追加
 
@@ -84,7 +84,7 @@ Import で作られたサービスが Backend です。
 | 項目 | 設定値 |
 |------|--------|
 | **Builder** | **Dockerfile** |
-| **Dockerfile Path** | `docker/railway/Dockerfile` |
+| **Dockerfile Path** | `Dockerfile`（リポジトリルート） |
 | **Config file** | `/railway.json`（表示されていれば OK） |
 
 Build 画面に `The value is set in /railway.json` と出ていれば正しいです。
@@ -168,9 +168,9 @@ Render の無料 MySQL は制限があるため、学習用は **Railway MySQL**
 | Build Logs の内容 | 原因 | 対処 |
 |-------------------|------|------|
 | `requirements.txt not found` | Root Directory が `backend` のまま | Source → Root Directory を **削除して空**に |
-| `backend/requirements.txt not found` | 古い Dockerfile 設定 | Dockerfile Path = **`docker/railway/Dockerfile`** |
-| `Dockerfile does not exist` | ルートの `Dockerfile` を参照している | **`docker/railway/Dockerfile`** に変更し Redeploy |
-| Build が数秒で失敗 | monorepo 全体をビルドコンテキストに含めている | 最新 `master`（`.dockerignore` 修正済み）を Redeploy |
+| `backend/requirements.txt not found` | Root Directory が `backend` のまま | Source → Root Directory を **削除して空**に |
+| `Dockerfile does not exist` | 古い Dockerfile パスを参照 | Dockerfile Path = **`Dockerfile`**（ルート） |
+| Build が数秒で失敗 | `railway.json` 未読 or Root Directory 不一致 | Root Directory **空** + Redeploy |
 | `Nixpacks` / `npm install` 失敗 | Frontend まで含めて自動判定された | Builder を **Dockerfile** に変更 |
 | Build 成功 → Deploy 失敗 / Crash | **MySQL や JWT 未設定** | 下記「5. 環境変数」を設定して **Redeploy** |
 | `database: disconnected` | DB 未接続 or init.sql 未実行 | MySQL 追加 + `init.sql` 適用 |

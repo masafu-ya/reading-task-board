@@ -1,4 +1,4 @@
-# Railway backend image (monorepo root context)
+# Railway + GitHub Actions (monorepo root context)
 FROM python:3.12-slim-bookworm
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
