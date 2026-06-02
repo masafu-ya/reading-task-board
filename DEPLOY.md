@@ -46,7 +46,7 @@ Day 14 では **Backend + MySQL** をクラウドに載せます。Frontend は 
 
 Import 直後に **1 回デプロイが走ります**。MySQL や環境変数がまだ無いと **Build は成功しても起動で失敗** することがあります（正常な流れです）。
 
-Railway 向けは **`backend/Dockerfile`** と **`backend/railway.toml`** です。**Root Directory を `/backend`** に設定してください（GitHub Actions でも検証済みの Docker ビルド）。
+Railway 向けはルートの **`Dockerfile`** と **`railway.toml`**（Builder = **Dockerfile**）です。**Root Directory は空**にしてください（Railpack は使いません）。
 
 ### 2. MySQL サービスを追加
 
@@ -70,19 +70,16 @@ PowerShell から Railway の公開 TCP プロキシを使う場合は、Railway
 
 Import で作られたサービスが Backend です。
 
-#### 4-1. Source（Root Directory）— 必須
+#### 4-1. Source（Root Directory）
 
-**Settings** → **Source** → **Add Root Directory**（または編集）:
+**Settings** → **Source** で **Root Directory が空**であることを確認します。
 
-```
-backend
-```
+- 「Add Root Directory」と表示 → ✅ OK
+- 「Root Directory: `/backend`」→ ❌ **Remove** して空に戻す
 
-**Root Directory: `/backend`** と表示されれば OK です。
+> Root Directory を `backend` にすると Railpack が動き、エラーになることがあります。
 
-Railpack ではなく **Dockerfile ビルド** を使います（`backend/requirements.txt` を Docker 内で `pip install`）。
-
-#### 4-2. Variables — 古い変数を削除
+#### 4-2. Variables
 
 **Variables** タブで次があれば **すべて削除**（⋮ → Delete）:
 
@@ -94,11 +91,11 @@ Railpack ではなく **Dockerfile ビルド** を使います（`backend/requir
 
 | 項目 | 設定値 |
 |------|--------|
-| **Builder** | **Dockerfile** |
-| **Dockerfile Path** | `Dockerfile`（`backend` フォルダ内） |
-| **Config file** | `/backend/railway.toml`（表示されていれば OK） |
+| **Builder** | **Dockerfile**（Railpack ではない） |
+| **Dockerfile Path** | `Dockerfile`（リポジトリルート） |
+| **Config file** | `/railway.toml` |
 
-Build ログに `Using detected Dockerfile!` と `pip install` が **30 秒以上** 出れば OK です。
+Build ログに **`Using detected Dockerfile!`** が出れば Railpack ではなく Docker ビルドです。
 
 #### 4-4. ドメイン
 
@@ -180,8 +177,8 @@ Render の無料 MySQL は制限があるため、学習用は **Railway MySQL**
 |-------------------|------|------|
 | `requirements.txt not found` | Root Directory が空 | Source → Root Directory に **`backend`** を設定 |
 | `Dockerfile does not exist` | `RAILWAY_DOCKERFILE_PATH` が残っている | Variables から **削除** |
-| `pip: not found` | Railpack 使用（非推奨） | 最新 `master` を Redeploy（Dockerfile 方式に戻済み） |
-| `railpack process exited` | 同上 | Builder が **Dockerfile** か確認 |
+| `railpack process exited` | Railpack が動いている | Root Directory **空** + `/railway.toml` で Redeploy |
+| `pip: not found` | 同上（Railpack） | 同上 |
 | Build が数秒で失敗 | `RAILWAY_DOCKERFILE_PATH` が残っている | Variables から **削除** |
 | `Nixpacks` / `npm install` 失敗 | Frontend まで自動判定 | `railway.toml` が読まれているか確認（Config: `/railway.toml`） |
 | Build 成功 → Deploy 失敗 / Crash | **MySQL や JWT 未設定** | 下記「5. 環境変数」を設定して **Redeploy** |
@@ -193,10 +190,10 @@ Render の無料 MySQL は制限があるため、学習用は **Railway MySQL**
 
 ### それでも Build が 3 秒で失敗する場合
 
-1. **Root Directory** = **`backend`**
+1. **Root Directory** を **空**にする（`/backend` を Remove）
 2. **Variables** から `RAILWAY_DOCKERFILE_PATH` を **削除**
-3. **Build** → Builder が **Dockerfile** か確認
-4. **Redeploy**
+3. **Build** → Builder = **Dockerfile**、Config = **`/railway.toml`**
+4. **Redeploy** — ログに `Using detected Dockerfile!` があるか確認
 
 ### その他
 
