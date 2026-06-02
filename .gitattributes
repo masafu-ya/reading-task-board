@@ -1,5 +1,5 @@
 Dockerfile text eol=lf
 **/Dockerfile text eol=lf
-Dockerfile.railway text eol=lf
+*.sh text eol=lf
+railway.json text eol=lf
 railway.toml text eol=lf
-**/railway.toml text eol=lf

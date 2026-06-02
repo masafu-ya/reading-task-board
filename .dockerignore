@@ -1,13 +1,8 @@
-# Railway ビルド用（リポジトリルートの Dockerfile）
-frontend/
-node_modules/
-backend/venv/
-backend/.pytest_cache/
-backend/__pycache__/
-.git/
-*.md
-LEARNING_CURRICULUM.xlsx
-mysql/
-scripts/
-docker-compose.yml
-docker-start.ps1
+# Railway: send only backend + docker config (monorepo)
+*
+!backend/
+!backend/**
+!docker/
+!docker/railway/
+!docker/railway/**
+!railway.json
