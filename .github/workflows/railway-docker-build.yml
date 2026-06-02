@@ -5,13 +5,11 @@ on:
     branches: [master]
     paths:
       - "backend/**"
-      - "Dockerfile"
-      - "railway.toml"
+      - ".github/workflows/railway-docker-build.yml"
+  pull_request:
     paths:
       - "backend/**"
-      - "Dockerfile"
-      - "railway.toml"
-      - ".dockerignore"
+      - ".github/workflows/railway-docker-build.yml"
 
 jobs:
   docker-build:
@@ -19,8 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build Railway image
-        run: docker build -f Dockerfile -t reading-task-board-api .
+      - name: Build backend image (Railway uses same context)
+        run: docker build -f backend/Dockerfile backend -t reading-task-board-api
 
       - name: Smoke test container
         run: |
