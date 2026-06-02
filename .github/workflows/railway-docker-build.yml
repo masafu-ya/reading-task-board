@@ -5,10 +5,14 @@ on:
     branches: [master]
     paths:
       - "backend/**"
+      - "Dockerfile"
+      - "railway.json"
       - ".github/workflows/railway-docker-build.yml"
   pull_request:
     paths:
       - "backend/**"
+      - "Dockerfile"
+      - "railway.json"
       - ".github/workflows/railway-docker-build.yml"
 
 jobs:
@@ -17,7 +21,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build backend image (Railway: Root Directory=backend)
+      - name: Build Railway image (repo root Dockerfile)
+        run: docker build -f Dockerfile . -t reading-task-board-api-railway
+
+      - name: Build docker-compose image (backend context)
         run: docker build -f backend/Dockerfile backend -t reading-task-board-api
 
       - name: Smoke test container
@@ -26,7 +33,7 @@ jobs:
             -e JWT_SECRET=ci-test-secret-key-for-github-actions \
             -e DB_HOST=127.0.0.1 \
             -e DB_PASSWORD=unused \
-            reading-task-board-api
+            reading-task-board-api-railway
           sleep 3
           curl -sf http://127.0.0.1:8000/health
           docker stop api-test

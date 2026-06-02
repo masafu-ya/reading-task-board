@@ -70,28 +70,25 @@ PowerShell から Railway の公開 TCP プロキシを使う場合は、Railway
 
 Import で作られたサービスが Backend です。
 
-#### 4-1. Source（Root Directory）— 必須
+#### 4-1. Source（Root Directory）— **空にする**
 
-**Settings** → **Source** → **Add Root Directory**:
+**Settings** → **Source** → **Root Directory**:
 
-```
-backend
-```
+- 以前 `backend` を設定していた場合 → **削除して空** にする
+- **Root Directory が空**（未設定）であること
 
-**Root Directory: `/backend`** と表示されれば OK。
-
-> Root Directory が **空** だと、Railpack が `frontend/package.json` を見つけて **railpack process exited** になります。
+> **重要**: Root Directory = `backend` でも UI で Builder = Dockerfile でも、Railway が **Railpack を先に実行** して `railpack process exited` になる不具合が報告されています。  
+> 対策として **リポジトリルート** の `Dockerfile`（`backend/` を COPY する構成）+ **Root Directory 空** で Docker ビルドを強制します。
 
 #### 4-2. Variables — Dockerfile を強制
 
-**Variables** → **New Variable**:
+**Variables** → **New Variable**（または既存を更新）:
 
 | 変数 | 値 |
 |------|-----|
 | `RAILWAY_DOCKERFILE_PATH` | `Dockerfile` |
 
-Root Directory が `backend` のとき、`Dockerfile` = `backend/Dockerfile` を指します。  
-Railpack が動く Railway 不具合対策として **必須** です。
+リポジトリルートの `Dockerfile` を指します。Railpack 回避のため **必須** です。
 
 #### 4-3. Build — Dockerfile を手動選択
 
@@ -101,12 +98,21 @@ Railpack が動く Railway 不具合対策として **必須** です。
 |------|--------|
 | **Builder** | **Dockerfile**（Railpack ではない） |
 | **Dockerfile Path** | `Dockerfile` |
-| **Config file** | `/backend/railway.json` |
+| **Config file** | `/railway.json` |
 
 Builder が **Railpack** のまま → ドロップダウンで **Dockerfile** を選び **Save**。
 
-Build ログに **`Using detected Dockerfile!`** と **`pip install`** が出れば OK。  
-**`railpack.com`** が出る場合は Builder がまだ Railpack です。
+**Metal Build Environment** がある場合 → **無効（Disable）** を試す（Railpack 優先の報告あり）。
+
+Build ログに **`Using detected Dockerfile!`** と **`Step 1/... FROM python`** が出れば OK。  
+**`railpack.com`** や **`using build driver railpack`** が出る場合は Builder がまだ Railpack です。
+
+#### 4-3b. それでも Railpack のとき — サービス作り直し
+
+1. 上記設定をすべて保存
+2. Backend サービスを **Delete**（MySQL サービスは残す）
+3. **New Service** → 同じ GitHub リポジトリ → **Root Directory 空** のまま最初から Deploy
+4. Variables / Build 設定を 4-2〜4-3 どおり再設定
 
 #### 4-4. ドメイン
 
@@ -186,13 +192,13 @@ Render の無料 MySQL は制限があるため、学習用は **Railway MySQL**
 
 | Build Logs の内容 | 原因 | 対処 |
 |-------------------|------|------|
-| `requirements.txt not found` | Root Directory が空 | Source → Root Directory に **`backend`** を設定 |
-| `Dockerfile does not exist` | `RAILWAY_DOCKERFILE_PATH` が残っている | Variables から **削除** |
-| `railpack process exited` | Railpack が動いている | Root Directory = **`backend`** + `RAILWAY_DOCKERFILE_PATH=Dockerfile` + Builder = **Dockerfile** |
-| `npm install` / `No start command` | Root Directory が空 | **`backend`** を設定 |
+| `requirements.txt not found` | Dockerfile パス不一致 | Root Directory **空** + `RAILWAY_DOCKERFILE_PATH=Dockerfile`（ルート `Dockerfile`） |
+| `Dockerfile does not exist` | Root Directory = `backend` のまま | Root Directory を **削除（空）**、`Dockerfile` はリポジトリルート |
+| `railpack process exited` | Railpack が動いている | Root Directory **空** + Variables + Builder = **Dockerfile** + Config = `/railway.json`（§4-3b 作り直し） |
+| `npm install` / `No start command` | Railpack が frontend を検出 | Root Directory **空** + **`RAILWAY_DOCKERFILE_PATH=Dockerfile`** で Docker 強制 |
 | `pip: not found` | 古い buildCommand 設定 | 最新 `master` を Redeploy |
-| Build が数秒で失敗 | `RAILWAY_DOCKERFILE_PATH` が残っている | Variables から **削除** |
-| `Nixpacks` / `npm install` 失敗 | Root Directory 未設定 | **`backend`** を設定 |
+| Build が数秒で失敗 | Builder が Railpack のまま | Build → **Dockerfile** 手動選択 → Redeploy |
+| `Nixpacks` / `npm install` 失敗 | Railpack ビルド | 上記 Docker 強制設定を確認 |
 | Build 成功 → Deploy 失敗 / Crash | **MySQL や JWT 未設定** | 下記「5. 環境変数」を設定して **Redeploy** |
 | `database: disconnected` | DB 未接続 or init.sql 未実行 | MySQL 追加 + `init.sql` 適用 |
 
@@ -202,11 +208,11 @@ Render の無料 MySQL は制限があるため、学習用は **Railway MySQL**
 
 ### それでも Build が 3 秒で失敗する場合
 
-1. **Root Directory** = **`backend`**
-2. **Variables** に `RAILWAY_DOCKERFILE_PATH` = **`Dockerfile`** を **追加**
-3. **Build** → Builder = **Dockerfile** に手動変更 → **Save**
-4. **Redeploy**
-5. まだ `railpack.com` → **方法 B: Render** を試す（下記）
+1. **Root Directory** を **空**（`backend` を削除）
+2. **Variables** に `RAILWAY_DOCKERFILE_PATH` = **`Dockerfile`**
+3. **Build** → Builder = **Dockerfile**、Config = **`/railway.json`** → **Save**
+4. **Redeploy** — ログで `Using detected Dockerfile!` を確認
+5. まだ `railpack.com` → §4-3b サービス作り直し、または **方法 B: Render**
 
 ### その他
 
