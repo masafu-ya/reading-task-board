@@ -46,9 +46,7 @@ Day 14 では **Backend + MySQL** をクラウドに載せます。Frontend は 
 
 Import 直後に **1 回デプロイが走ります**。MySQL や環境変数がまだ無いと **Build は成功しても起動で失敗** することがあります（正常な流れです）。
 
-Railway 向けはルートの **`Dockerfile`** と **`railway.json`**（Builder = **DOCKERFILE**）です。**Root Directory は空**にしてください。
-
-> **注意（2026年3月〜）**: Railway の不具合で `railway.json` の Dockerfile 指定が無視され **Railpack** が動くことがあります。下記「4-3」の **Variables 設定が必須** です。
+Railway 公式 monorepo 手順に従い、**Root Directory = `/backend`** にします。Railpack が `frontend/` を誤検出しないよう、`backend/` だけをビルドします。設定ファイルは **`backend/railway.json`** です。
 
 ### 2. MySQL サービスを追加
 
@@ -72,41 +70,37 @@ PowerShell から Railway の公開 TCP プロキシを使う場合は、Railway
 
 Import で作られたサービスが Backend です。
 
-#### 4-1. Source（Root Directory）
+#### 4-1. Source（Root Directory）— 必須
 
-**Settings** → **Source** で **Root Directory が空**であることを確認します。
+**Settings** → **Source** → **Add Root Directory**:
 
-- 「Add Root Directory」と表示 → ✅ OK
-- 「Root Directory: `/backend`」→ ❌ **Remove** して空に戻す
+```
+backend
+```
 
-> Root Directory を `backend` にすると Railpack が動き、エラーになることがあります。
+**Root Directory: `/backend`** と表示されれば OK。
 
-#### 4-2. Variables — 必須（Railpack 回避）
+> Root Directory が **空** だと、Railpack が `frontend/package.json` を見つけて **railpack process exited** になります。
 
-**Variables** タブ → **New Variable** で次を **追加**:
+#### 4-2. Variables — 削除するもの
 
-| 変数 | 値 |
-|------|-----|
-| `RAILWAY_DOCKERFILE_PATH` | `Dockerfile` |
+**Variables** タブで次があれば **削除**（⋮ → Delete）:
 
-Railway の不具合で Railpack が動く場合、この変数で **Dockerfile ビルドを強制** します。
+| 変数 | 理由 |
+|------|------|
+| `RAILWAY_DOCKERFILE_PATH` | Dockerfile 強制は Railpack と競合する |
 
-`RAILWAY_DOCKERFILE_PATH` を以前削除した場合は、**再度追加** してください。
+#### 4-3. Build
 
-#### 4-3. Build — 手動で Dockerfile を選択
-
-**Settings** → **Build** で次を確認・変更:
+**Settings** → **Build**:
 
 | 項目 | 設定値 |
 |------|--------|
-| **Builder** | **Dockerfile**（Railpack ではない） |
-| **Dockerfile Path** | `Dockerfile` |
-| **Config file** | `/railway.json` |
+| **Builder** | **Railpack** |
+| **Config file** | `/backend/railway.json` |
 
-Builder が **Railpack** のままなら、ドロップダウンから **Dockerfile** を選び **Save** してください。
-
-Build ログに **`Using detected Dockerfile!`** が出れば成功です。  
-**`railpack.com`** や **`railpack process exited`** が出る場合は Railpack がまだ動いています。
+Build ログに **`python`** や **`pip install -r requirements.txt`** が出れば OK。  
+**`npm`** や **`frontend`** が出る場合は Root Directory が空のままです。
 
 #### 4-4. ドメイン
 
@@ -188,10 +182,11 @@ Render の無料 MySQL は制限があるため、学習用は **Railway MySQL**
 |-------------------|------|------|
 | `requirements.txt not found` | Root Directory が空 | Source → Root Directory に **`backend`** を設定 |
 | `Dockerfile does not exist` | `RAILWAY_DOCKERFILE_PATH` が残っている | Variables から **削除** |
-| `railpack process exited` | Railway が Railpack を使用（既知の不具合） | `RAILWAY_DOCKERFILE_PATH=Dockerfile` を **追加** + Build で **Dockerfile** を手動選択 |
-| `pip: not found` | 同上（Railpack） | 同上 |
+| `railpack process exited` | Root Directory が **空**（frontend を誤検出） | Root Directory = **`backend`** + `RAILWAY_DOCKERFILE_PATH` **削除** |
+| `npm install` / `No start command` | 同上 | 同上 |
+| `pip: not found` | 古い buildCommand 設定 | 最新 `master` を Redeploy |
 | Build が数秒で失敗 | `RAILWAY_DOCKERFILE_PATH` が残っている | Variables から **削除** |
-| `Nixpacks` / `npm install` 失敗 | Frontend まで自動判定 | `railway.toml` が読まれているか確認（Config: `/railway.toml`） |
+| `Nixpacks` / `npm install` 失敗 | Root Directory 未設定 | **`backend`** を設定 |
 | Build 成功 → Deploy 失敗 / Crash | **MySQL や JWT 未設定** | 下記「5. 環境変数」を設定して **Redeploy** |
 | `database: disconnected` | DB 未接続 or init.sql 未実行 | MySQL 追加 + `init.sql` 適用 |
 
@@ -201,11 +196,10 @@ Render の無料 MySQL は制限があるため、学習用は **Railway MySQL**
 
 ### それでも Build が 3 秒で失敗する場合
 
-1. **Root Directory** を **空**にする
-2. **Variables** に `RAILWAY_DOCKERFILE_PATH` = **`Dockerfile`** を **追加**
-3. **Build** → Builder を **Dockerfile** に手動変更して **Save**
-4. **Redeploy** — ログに `Using detected Dockerfile!` があるか確認
-5. まだ Railpack → Backend サービスを **Delete** して作り直し
+1. **Root Directory** = **`backend`**
+2. **Variables** から `RAILWAY_DOCKERFILE_PATH` を **削除**
+3. **Redeploy** — ログに `python` / `requirements.txt` があるか確認
+4. まだ失敗 → Build ログ全文を共有
 
 ### その他
 
