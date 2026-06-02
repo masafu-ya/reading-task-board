@@ -46,7 +46,7 @@ Day 14 では **Backend + MySQL** をクラウドに載せます。Frontend は 
 
 Import 直後に **1 回デプロイが走ります**。MySQL や環境変数がまだ無いと **Build は成功しても起動で失敗** することがあります（正常な流れです）。
 
-Railway 公式 monorepo 手順: **Root Directory = `/backend`** + **`backend/Dockerfile`**（GitHub Actions 検証済み）。Railpack は使いません。
+> **Railpack 注意**: モノレポでは Railway が `frontend/package.json` を検出して **`railpack process exited`** になることがあります。§4-6 の **GHCR 方式** が最も確実です。
 
 ### 2. MySQL サービスを追加
 
@@ -98,21 +98,62 @@ Import で作られたサービスが Backend です。
 |------|--------|
 | **Builder** | **Dockerfile**（Railpack ではない） |
 | **Dockerfile Path** | `Dockerfile` |
-| **Config file** | `/railway.json` |
+| **Config file** | `/railway.json` または `/railway.toml` |
 
 Builder が **Railpack** のまま → ドロップダウンで **Dockerfile** を選び **Save**。
 
-**Metal Build Environment** がある場合 → **無効（Disable）** を試す（Railpack 優先の報告あり）。
-
 Build ログに **`Using detected Dockerfile!`** と **`Step 1/... FROM python`** が出れば OK。  
-**`railpack.com`** や **`using build driver railpack`** が出る場合は Builder がまだ Railpack です。
+**`railpack.com`** や **`using build driver railpack`** が出る場合 → **§4-6（GHCR 方式）** へ。
 
-#### 4-3b. それでも Railpack のとき — サービス作り直し
+#### 4-3b. それでも Railpack のとき — サービス作り直し（任意）
 
 1. 上記設定をすべて保存
 2. Backend サービスを **Delete**（MySQL サービスは残す）
 3. **New Service** → 同じ GitHub リポジトリ → **Root Directory 空** のまま最初から Deploy
 4. Variables / Build 設定を 4-2〜4-3 どおり再設定
+
+#### 4-6. Railpack が止まらない場合 — **GHCR 方式（推奨）**
+
+Railway のビルド（Railpack）を **使わず**、GitHub Actions がビルドした Docker イメージを Railway が pull します。
+
+**1. GitHub の権限**
+
+リポジトリ → **Settings** → **Actions** → **General** → **Workflow permissions** → **Read and write permissions**
+
+**2. 一度 master を push してイメージを GHCR に載せる**
+
+Actions の **Verify Railway Docker build** が成功すると、次のイメージが作成されます:
+
+```
+ghcr.io/masafu-ya/reading-task-board-api:latest
+```
+
+GitHub → **Packages** → 該当パッケージ → **Package settings** → **Change visibility** → **Public**  
+（Private のままだと Railway が pull できません）
+
+**3. Railway Backend の Source を Docker Image に変更**
+
+Backend サービス → **Settings** → **Source**:
+
+| 項目 | 設定 |
+|------|------|
+| **Source** | **Docker Image**（GitHub Repo ではない） |
+| **Image** | `ghcr.io/masafu-ya/reading-task-board-api:latest` |
+
+**Auto deploys** / **Wait for CI** → **Disable**（CI が redeploy するため）
+
+**4. GitHub に Railway 連携を追加**
+
+| 種類 | 名前 | 値の取得元 |
+|------|------|-----------|
+| Secret | `RAILWAY_TOKEN` | Railway プロジェクト → **Settings** → **Tokens** → Create |
+| Variable | `RAILWAY_SERVICE_ID` | Backend サービス → **Settings** → URL の `service/` 以降の ID |
+
+**5. 動作確認**
+
+`master` に push → Actions が **GHCR push** → **railway redeploy** を実行。
+
+Deployments ログに **`railpack.com` が出ない** こと、**Deploy** タブで `uvicorn` が起動することを確認。
 
 #### 4-4. ドメイン
 
@@ -194,7 +235,7 @@ Render の無料 MySQL は制限があるため、学習用は **Railway MySQL**
 |-------------------|------|------|
 | `requirements.txt not found` | Dockerfile パス不一致 | Root Directory **空** + `RAILWAY_DOCKERFILE_PATH=Dockerfile`（ルート `Dockerfile`） |
 | `Dockerfile does not exist` | Root Directory = `backend` のまま | Root Directory を **削除（空）**、`Dockerfile` はリポジトリルート |
-| `railpack process exited` | Railpack が動いている | Root Directory **空** + Variables + Builder = **Dockerfile** + Config = `/railway.json`（§4-3b 作り直し） |
+| `railpack process exited` | Railpack が動いている | **§4-6 GHCR 方式**（推奨）。または Root Directory 空 + Builder = Dockerfile |
 | `npm install` / `No start command` | Railpack が frontend を検出 | Root Directory **空** + **`RAILWAY_DOCKERFILE_PATH=Dockerfile`** で Docker 強制 |
 | `pip: not found` | 古い buildCommand 設定 | 最新 `master` を Redeploy |
 | Build が数秒で失敗 | Builder が Railpack のまま | Build → **Dockerfile** 手動選択 → Redeploy |
@@ -212,7 +253,7 @@ Render の無料 MySQL は制限があるため、学習用は **Railway MySQL**
 2. **Variables** に `RAILWAY_DOCKERFILE_PATH` = **`Dockerfile`**
 3. **Build** → Builder = **Dockerfile**、Config = **`/railway.json`** → **Save**
 4. **Redeploy** — ログで `Using detected Dockerfile!` を確認
-5. まだ `railpack.com` → §4-3b サービス作り直し、または **方法 B: Render**
+5. まだ `railpack.com` → **§4-6 GHCR 方式**、または **方法 B: Render**
 
 ### その他
 

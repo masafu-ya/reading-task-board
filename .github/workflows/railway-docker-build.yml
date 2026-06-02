@@ -7,13 +7,19 @@ on:
       - "backend/**"
       - "Dockerfile"
       - "railway.json"
+      - "railway.toml"
       - ".github/workflows/railway-docker-build.yml"
   pull_request:
     paths:
       - "backend/**"
       - "Dockerfile"
       - "railway.json"
+      - "railway.toml"
       - ".github/workflows/railway-docker-build.yml"
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   docker-build:
@@ -37,3 +43,37 @@ jobs:
           sleep 3
           curl -sf http://127.0.0.1:8000/health
           docker stop api-test
+
+      - name: Log in to GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push image to GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          IMAGE=ghcr.io/${{ github.repository_owner }}/reading-task-board-api
+          docker tag reading-task-board-api-railway "${IMAGE}:latest"
+          docker tag reading-task-board-api-railway "${IMAGE}:${{ github.sha }}"
+          docker push "${IMAGE}:latest"
+          docker push "${IMAGE}:${{ github.sha }}"
+
+  deploy-railway:
+    needs: docker-build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    container: ghcr.io/railwayapp/cli:latest
+    steps:
+      - name: Redeploy Railway (pre-built Docker image)
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_SERVICE_ID: ${{ vars.RAILWAY_SERVICE_ID }}
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ] || [ -z "$RAILWAY_SERVICE_ID" ]; then
+            echo "Skip: set GitHub Secrets RAILWAY_TOKEN and Variables RAILWAY_SERVICE_ID (see DEPLOY.md §4-6)."
+            exit 0
+          fi
+          railway redeploy --service="$RAILWAY_SERVICE_ID" -y
