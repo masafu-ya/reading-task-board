@@ -46,7 +46,7 @@ Day 14 では **Backend + MySQL** をクラウドに載せます。Frontend は 
 
 Import 直後に **1 回デプロイが走ります**。MySQL や環境変数がまだ無いと **Build は成功しても起動で失敗** することがあります（正常な流れです）。
 
-Railway 向けは **`railway.toml`（Railpack）** です。Docker は使わず Python を直接ビルドします。**Root Directory は空**にしてください。
+Railway 向けは **`railway.toml`（Railpack）** です。**Root Directory を `/backend`** に設定してください（Railpack が `requirements.txt` を自動検出します）。
 
 ### 2. MySQL サービスを追加
 
@@ -70,12 +70,17 @@ PowerShell から Railway の公開 TCP プロキシを使う場合は、Railway
 
 Import で作られたサービスが Backend です。
 
-#### 4-1. Source（Root Directory）
+#### 4-1. Source（Root Directory）— 必須
 
-**Settings** → **Source** で **Root Directory が空**であることを確認します。
+**Settings** → **Source** → **Add Root Directory**（または編集）:
 
-- 「Add Root Directory」と表示 → ✅ OK
-- 「Root Directory: `/backend`」→ ❌ **Remove** して空に戻す
+```
+backend
+```
+
+**Root Directory: `/backend`** と表示されれば OK です。
+
+Railpack が `backend/requirements.txt` を自動で読み取り、`pip install` します（手動の buildCommand は不要）。
 
 #### 4-2. Variables — 古い変数を削除
 
@@ -174,7 +179,8 @@ Render の無料 MySQL は制限があるため、学習用は **Railway MySQL**
 |-------------------|------|------|
 | `requirements.txt not found` | Root Directory が空 | Source → Root Directory に **`backend`** を設定 |
 | `Dockerfile does not exist` | `RAILWAY_DOCKERFILE_PATH` が残っている | Variables から **削除** |
-| Build が数秒で失敗 | Dockerfile ビルドを試している | Root Directory **空** + `RAILWAY_DOCKERFILE_PATH` **削除** + Builder が **Railpack** か確認 |
+| `pip: not found` | buildCommand が Railpack の Python 準備前に実行された | 最新 `master` を Redeploy（buildCommand 削除済み）+ Root Directory = **`backend`** |
+| Build が数秒で失敗 | Dockerfile ビルドを試している | Builder が **Railpack** か確認 |
 | `Nixpacks` / `npm install` 失敗 | Frontend まで自動判定 | `railway.toml` が読まれているか確認（Config: `/railway.toml`） |
 | Build 成功 → Deploy 失敗 / Crash | **MySQL や JWT 未設定** | 下記「5. 環境変数」を設定して **Redeploy** |
 | `database: disconnected` | DB 未接続 or init.sql 未実行 | MySQL 追加 + `init.sql` 適用 |
@@ -185,11 +191,10 @@ Render の無料 MySQL は制限があるため、学習用は **Railway MySQL**
 
 ### それでも Build が 3 秒で失敗する場合
 
-1. **Root Directory** を **空**にする（`/backend` を Remove）
+1. **Root Directory** = **`backend`**
 2. **Variables** から `RAILWAY_DOCKERFILE_PATH` を **削除**
-3. **Build** → Builder が **Railpack** になっているか確認
+3. **Build** → Builder が **Railpack** か確認
 4. **Redeploy**
-5. Build ログの **全文** をコピーして共有（Deployments → View Logs → Build タブ）
 
 ### その他
 
