@@ -1,0 +1,36 @@
+name: Verify Railway Docker build
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "backend/**"
+      - "docker/railway/**"
+      - "railway.json"
+      - ".dockerignore"
+  pull_request:
+    paths:
+      - "backend/**"
+      - "docker/railway/**"
+      - "railway.json"
+      - ".dockerignore"
+
+jobs:
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Railway image
+        run: docker build -f docker/railway/Dockerfile -t reading-task-board-api .
+
+      - name: Smoke test container
+        run: |
+          docker run -d --name api-test -p 8000:8000 \
+            -e JWT_SECRET=ci-test-secret-key-for-github-actions \
+            -e DB_HOST=127.0.0.1 \
+            -e DB_PASSWORD=unused \
+            reading-task-board-api
+          sleep 3
+          curl -sf http://127.0.0.1:8000/health
+          docker stop api-test
