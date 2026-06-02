@@ -5,13 +5,11 @@ on:
     branches: [master]
     paths:
       - "backend/**"
-      - "docker/railway/**"
+      - "Dockerfile"
       - "railway.json"
-      - ".dockerignore"
-  pull_request:
     paths:
       - "backend/**"
-      - "docker/railway/**"
+      - "Dockerfile"
       - "railway.json"
       - ".dockerignore"
 
@@ -22,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build Railway image
-        run: docker build -f docker/railway/Dockerfile -t reading-task-board-api .
+        run: docker build -f Dockerfile -t reading-task-board-api .
 
       - name: Smoke test container
         run: |
