@@ -46,7 +46,7 @@ Day 14 では **Backend + MySQL** をクラウドに載せます。Frontend は 
 
 Import 直後に **1 回デプロイが走ります**。MySQL や環境変数がまだ無いと **Build は成功しても起動で失敗** することがあります（正常な流れです）。
 
-Railway 向けの設定はルートの **`Dockerfile`** と **`railway.json`** です。**Root Directory は空のまま**で動きます。
+Railway 向けの設定はルートの **`Dockerfile`** と **`railway.toml`** です。**Root Directory は空のまま**で動きます。
 
 ### 2. MySQL サービスを追加
 
@@ -85,15 +85,25 @@ Import で作られたサービスが Backend です。
 |------|--------|
 | **Builder** | **Dockerfile** |
 | **Dockerfile Path** | `Dockerfile`（リポジトリルート） |
-| **Config file** | `/railway.json`（表示されていれば OK） |
+| **Config file** | `/railway.toml`（表示されていれば OK） |
 
-Build 画面に `The value is set in /railway.json` と出ていれば正しいです。
+Build 画面に `The value is set in /railway.toml` と出ていれば正しいです。
 
-#### 4-3. ドメイン
+#### 4-3. Variables（ビルド失敗時の必須設定）
+
+**Settings** → **Variables** に次を **1 つ** 追加してください（3 秒で Build 失敗する場合の対策）:
+
+| 変数 | 値 |
+|------|-----|
+| `RAILWAY_DOCKERFILE_PATH` | `Dockerfile` |
+
+Railway が Dockerfile を見つけられないとき、この変数で明示的に指定します。
+
+#### 4-4. ドメイン
 
 **Settings** → **Networking** → **Generate Domain**（HTTPS URL を取得）
 
-#### 4-4. Redeploy
+#### 4-5. Redeploy
 
 **Deployments** → **Deploy** / **Redeploy**
 
@@ -170,7 +180,8 @@ Render の無料 MySQL は制限があるため、学習用は **Railway MySQL**
 | `requirements.txt not found` | Root Directory が `backend` のまま | Source → Root Directory を **削除して空**に |
 | `backend/requirements.txt not found` | Root Directory が `backend` のまま | Source → Root Directory を **削除して空**に |
 | `Dockerfile does not exist` | 古い Dockerfile パスを参照 | Dockerfile Path = **`Dockerfile`**（ルート） |
-| Build が数秒で失敗 | `railway.json` 未読 or Root Directory 不一致 | Root Directory **空** + Redeploy |
+| Build が数秒で失敗 | Dockerfile 未検出 | Variables に `RAILWAY_DOCKERFILE_PATH=Dockerfile` を追加 |
+| `failed to read Dockerfile` | 上記と同じ | Root Directory **空** + 変数追加 + Redeploy |
 | `Nixpacks` / `npm install` 失敗 | Frontend まで含めて自動判定された | Builder を **Dockerfile** に変更 |
 | Build 成功 → Deploy 失敗 / Crash | **MySQL や JWT 未設定** | 下記「5. 環境変数」を設定して **Redeploy** |
 | `database: disconnected` | DB 未接続 or init.sql 未実行 | MySQL 追加 + `init.sql` 適用 |
@@ -178,6 +189,21 @@ Render の無料 MySQL は制限があるため、学習用は **Railway MySQL**
 **ログの見方**: サービス → **Deployments** → 失敗した行 → **View Logs**（Build / Deploy タブ）
 
 **再デプロイ**: 設定を直したら **Deploy** → **Redeploy**（または GitHub に push）
+
+### それでも Build が 3 秒で失敗する場合
+
+GitHub 上では Docker ビルドは成功しています（Actions の `Verify Railway Docker build`）。Railway 側の設定ずれが原因のことが多いです。
+
+1. **Variables** に `RAILWAY_DOCKERFILE_PATH` = `Dockerfile` を追加
+2. **Source** → Root Directory を **空**にする
+3. **Redeploy**
+4. まだ失敗 → **Backend サービスを作り直す**:
+   - 失敗している Backend サービスを Delete
+   - **+ New** → **GitHub Repo** → 同じリポジトリ
+   - Import 後すぐ **Variables** に `RAILWAY_DOCKERFILE_PATH=Dockerfile` を設定
+   - MySQL 環境変数を再設定 → **Redeploy**
+
+Build ログに `pip install` や `FROM python` が **30 秒以上** 表示されれば成功に近い状態です。
 
 ### その他
 
