@@ -6,11 +6,11 @@ on:
     paths:
       - "backend/**"
       - "Dockerfile"
-      - "railway.json"
+      - "railway.toml"
     paths:
       - "backend/**"
       - "Dockerfile"
-      - "railway.json"
+      - "railway.toml"
       - ".dockerignore"
 
 jobs:

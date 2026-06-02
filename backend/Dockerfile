@@ -1,4 +1,4 @@
-# docker-compose 用（Railway は docker/railway/Dockerfile を使用）
+# docker-compose 用（Railway はリポジトリルートの Dockerfile を使用）
 FROM python:3.12-slim-bookworm
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
