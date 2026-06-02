@@ -5,16 +5,10 @@ on:
     branches: [master]
     paths:
       - "backend/**"
-      - "Dockerfile"
-      - "railway.json"
-      - ".dockerignore"
       - ".github/workflows/railway-docker-build.yml"
   pull_request:
     paths:
       - "backend/**"
-      - "Dockerfile"
-      - "railway.json"
-      - ".dockerignore"
       - ".github/workflows/railway-docker-build.yml"
 
 jobs:
@@ -23,8 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build Railway image (root Dockerfile)
-        run: docker build -f Dockerfile -t reading-task-board-api .
+      - name: Build backend image (Railway: Root Directory=backend)
+        run: docker build -f backend/Dockerfile backend -t reading-task-board-api
 
       - name: Smoke test container
         run: |

@@ -46,7 +46,7 @@ Day 14 では **Backend + MySQL** をクラウドに載せます。Frontend は 
 
 Import 直後に **1 回デプロイが走ります**。MySQL や環境変数がまだ無いと **Build は成功しても起動で失敗** することがあります（正常な流れです）。
 
-Railway 公式 monorepo 手順に従い、**Root Directory = `/backend`** にします。Railpack が `frontend/` を誤検出しないよう、`backend/` だけをビルドします。設定ファイルは **`backend/railway.json`** です。
+Railway 公式 monorepo 手順: **Root Directory = `/backend`** + **`backend/Dockerfile`**（GitHub Actions 検証済み）。Railpack は使いません。
 
 ### 2. MySQL サービスを追加
 
@@ -82,25 +82,31 @@ backend
 
 > Root Directory が **空** だと、Railpack が `frontend/package.json` を見つけて **railpack process exited** になります。
 
-#### 4-2. Variables — 削除するもの
+#### 4-2. Variables — Dockerfile を強制
 
-**Variables** タブで次があれば **削除**（⋮ → Delete）:
+**Variables** → **New Variable**:
 
-| 変数 | 理由 |
-|------|------|
-| `RAILWAY_DOCKERFILE_PATH` | Dockerfile 強制は Railpack と競合する |
+| 変数 | 値 |
+|------|-----|
+| `RAILWAY_DOCKERFILE_PATH` | `Dockerfile` |
 
-#### 4-3. Build
+Root Directory が `backend` のとき、`Dockerfile` = `backend/Dockerfile` を指します。  
+Railpack が動く Railway 不具合対策として **必須** です。
+
+#### 4-3. Build — Dockerfile を手動選択
 
 **Settings** → **Build**:
 
 | 項目 | 設定値 |
 |------|--------|
-| **Builder** | **Railpack** |
+| **Builder** | **Dockerfile**（Railpack ではない） |
+| **Dockerfile Path** | `Dockerfile` |
 | **Config file** | `/backend/railway.json` |
 
-Build ログに **`python`** や **`pip install -r requirements.txt`** が出れば OK。  
-**`npm`** や **`frontend`** が出る場合は Root Directory が空のままです。
+Builder が **Railpack** のまま → ドロップダウンで **Dockerfile** を選び **Save**。
+
+Build ログに **`Using detected Dockerfile!`** と **`pip install`** が出れば OK。  
+**`railpack.com`** が出る場合は Builder がまだ Railpack です。
 
 #### 4-4. ドメイン
 
@@ -182,8 +188,8 @@ Render の無料 MySQL は制限があるため、学習用は **Railway MySQL**
 |-------------------|------|------|
 | `requirements.txt not found` | Root Directory が空 | Source → Root Directory に **`backend`** を設定 |
 | `Dockerfile does not exist` | `RAILWAY_DOCKERFILE_PATH` が残っている | Variables から **削除** |
-| `railpack process exited` | Root Directory が **空**（frontend を誤検出） | Root Directory = **`backend`** + `RAILWAY_DOCKERFILE_PATH` **削除** |
-| `npm install` / `No start command` | 同上 | 同上 |
+| `railpack process exited` | Railpack が動いている | Root Directory = **`backend`** + `RAILWAY_DOCKERFILE_PATH=Dockerfile` + Builder = **Dockerfile** |
+| `npm install` / `No start command` | Root Directory が空 | **`backend`** を設定 |
 | `pip: not found` | 古い buildCommand 設定 | 最新 `master` を Redeploy |
 | Build が数秒で失敗 | `RAILWAY_DOCKERFILE_PATH` が残っている | Variables から **削除** |
 | `Nixpacks` / `npm install` 失敗 | Root Directory 未設定 | **`backend`** を設定 |
@@ -197,9 +203,10 @@ Render の無料 MySQL は制限があるため、学習用は **Railway MySQL**
 ### それでも Build が 3 秒で失敗する場合
 
 1. **Root Directory** = **`backend`**
-2. **Variables** から `RAILWAY_DOCKERFILE_PATH` を **削除**
-3. **Redeploy** — ログに `python` / `requirements.txt` があるか確認
-4. まだ失敗 → Build ログ全文を共有
+2. **Variables** に `RAILWAY_DOCKERFILE_PATH` = **`Dockerfile`** を **追加**
+3. **Build** → Builder = **Dockerfile** に手動変更 → **Save**
+4. **Redeploy**
+5. まだ `railpack.com` → **方法 B: Render** を試す（下記）
 
 ### その他
 
