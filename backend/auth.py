@@ -13,7 +13,7 @@ security = HTTPBearer(auto_error=False)
 
 JWT_SECRET = os.getenv("JWT_SECRET", "dev-only-change-me-in-production")
 JWT_ALGORITHM = "HS256"
-JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "1440"))
+JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES") or "1440")
 
 
 def hash_password(password: str) -> str:

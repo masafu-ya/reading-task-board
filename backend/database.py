@@ -8,13 +8,20 @@ from mysql.connector import MySQLConnection
 from mysql.connector.cursor import MySQLCursorDict
 
 
+def _env(key: str, default: str) -> str:
+    """Railway の参照変数が未解決だと空文字になるため、default にフォールバックする。"""
+    value = os.getenv(key)
+    return value if value not in (None, "") else default
+
+
 def _db_config() -> dict[str, Any]:
     return {
-        "host": os.getenv("DB_HOST", "localhost"),
-        "port": int(os.getenv("DB_PORT", "3306")),
-        "user": os.getenv("DB_USER", "root"),
-        "password": os.getenv("DB_PASSWORD", ""),
-        "database": os.getenv("DB_NAME", "learning_app"),
+        "host": _env("DB_HOST", "localhost"),
+        "port": int(_env("DB_PORT", "3306")),
+        "user": _env("DB_USER", "root"),
+        "password": _env("DB_PASSWORD", ""),
+        "database": _env("DB_NAME", "learning_app"),
+        "connection_timeout": 5,
     }
 
 
@@ -164,5 +171,5 @@ def check_db_connection() -> bool:
         with get_connection() as conn:
             conn.is_connected()
         return True
-    except mysql.connector.Error:
+    except (mysql.connector.Error, ValueError):
         return False
