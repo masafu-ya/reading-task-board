@@ -20,6 +20,8 @@ def _db_config() -> dict[str, Any]:
         "password": _env("DB_PASSWORD", ""),
         "database": _env("DB_NAME", "learning_app"),
         "connection_timeout": 5,
+        "ssl_disabled": True,
+        "allow_public_key_retrieval": True,
     }
 
 
