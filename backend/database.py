@@ -21,9 +21,7 @@ def _db_config() -> dict[str, Any]:
         "user": _env("DB_USER", "root"),
         "password": _env("DB_PASSWORD", ""),
         "database": _env("DB_NAME", "learning_app"),
-        "connection_timeout": 5,
-        # Railway 内部 MySQL（mysql.railway.internal）向け
-        "ssl_disabled": True,
+        "connection_timeout": 10,
     }
 
 

@@ -12,6 +12,7 @@ COPY backend/requirements.txt .
 RUN pip install --upgrade pip \
     && pip install -r requirements.txt
 
+# bust build cache when backend changes (Railway may cache COPY layers)
 COPY backend/ .
 RUN chmod +x entrypoint.sh
 
