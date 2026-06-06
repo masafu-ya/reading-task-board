@@ -266,10 +266,80 @@ Render の無料 MySQL は制限があるため、学習用は **Railway MySQL**
 
 ---
 
-## Day 15 への引き継ぎ
+## Day 15 — Frontend（Vercel）
 
-- Backend の HTTPS URL をメモしておく
-- Vercel デプロイ後、`CORS_ORIGINS` に Vercel URL を追加して Backend を再デプロイ
+**前提**: Day 14 で Backend `/health` が `database: connected` であること。
+
+本番 API URL（例）:
+
+```
+https://reading-task-board-production.up.railway.app
+```
+
+### 1. Vercel にプロジェクトを Import
+
+1. [Vercel](https://vercel.com) → **Add New** → **Project**
+2. GitHub リポジトリ `reading-task-board` を Import
+3. **Root Directory**: `frontend` を指定（Edit → Root Directory）
+4. Framework Preset: **Next.js**（自動検出）
+5. **Environment Variables**（Production）:
+
+| 変数 | 値 |
+|------|-----|
+| `NEXT_PUBLIC_API_URL` | `https://reading-task-board-production.up.railway.app`（Day 14 の URL） |
+
+> `NEXT_PUBLIC_*` はビルド時に埋め込まれます。変更したら **Redeploy** が必要です。
+
+6. **Deploy** → 付与された URL をメモ（例: `https://reading-task-board-xxx.vercel.app`）
+
+### 2. Backend の CORS を更新
+
+Railway **Backend** → **Variables**:
+
+| 変数 | 値 |
+|------|-----|
+| `CORS_ORIGINS` | Vercel の URL（`https://`・末尾 `/` なし） |
+
+例:
+
+```
+https://reading-task-board-xxx.vercel.app
+```
+
+複数 URL はカンマ区切り。`http://localhost:3000` はコード側で常に許可されます。
+
+→ **Redeploy**
+
+### 3. 本番動作確認
+
+Vercel URL を開き、次を確認:
+
+- [ ] ユーザー登録（`/login`）
+- [ ] ログイン → タスク CRUD
+- [ ] 読書メモ CRUD
+- [ ] ログアウト後、保護ページにアクセスできない
+
+ブラウザの DevTools → **Network** で API が本番 URL（Railway）向きか確認。
+
+### 4. CI（GitHub Actions）
+
+`.github/workflows/ci.yml` で push 時に `pytest` と `npm test` / `npm run build` を実行します。
+
+### 5. リリース（Day 15 完了）
+
+```bash
+git tag -a v0.2.0 -m "認証・テスト・Docker・デプロイ対応"
+git push origin v0.2.0
+```
+
+### トラブルシューティング（Frontend）
+
+| 症状 | 対処 |
+|------|------|
+| CORS エラー | `CORS_ORIGINS` に Vercel URL（https・末尾スラッシュなし）→ Backend Redeploy |
+| API が localhost を向く | Vercel の `NEXT_PUBLIC_API_URL` を確認 → Redeploy |
+| Vercel ビルド失敗 | Root Directory = `frontend`、`npm run build` ログを確認 |
+| 401 / 登録失敗 | Backend `/health` と `JWT_SECRET` を確認 |
 
 ---
 
