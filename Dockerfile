@@ -13,7 +13,7 @@ RUN pip install --upgrade pip \
     && pip install -r requirements.txt
 
 # Invalidate Railway/Docker layer cache (increment when backend DB config changes)
-ARG CACHEBUST=2026-06-06
+ARG CACHEBUST=2026-06-06-v2
 RUN echo "cachebust=${CACHEBUST}" > /dev/null
 
 COPY backend/ .
