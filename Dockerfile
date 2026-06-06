@@ -12,7 +12,10 @@ COPY backend/requirements.txt .
 RUN pip install --upgrade pip \
     && pip install -r requirements.txt
 
-# bust build cache when backend changes (Railway may cache COPY layers)
+# Invalidate Railway/Docker layer cache (increment when backend DB config changes)
+ARG CACHEBUST=2026-06-06
+RUN echo "cachebust=${CACHEBUST}" > /dev/null
+
 COPY backend/ .
 RUN chmod +x entrypoint.sh
 
